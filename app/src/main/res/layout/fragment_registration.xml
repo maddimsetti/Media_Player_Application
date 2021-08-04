@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:background="@drawable/registration_background"
+    android:elevation="10dp"
+    tools:context=".registration.RegistrationFragment">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:background="#DA86A2"
+        android:orientation="vertical">
+
+        <de.hdodenhof.circleimageview.CircleImageView
+            android:id="@+id/profile_register_page"
+            android:layout_width="match_parent"
+            android:layout_height="223dp"
+            android:src="@drawable/media_signup"
+            app:civ_border_color="@color/black"
+            app:civ_border_width="1dp" />
+
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="15dp"
+            android:layout_marginEnd="0dp"
+            android:layout_marginBottom="7dp"
+            android:text="@string/sign_up"
+            android:textAlignment="textStart"
+            android:textColor="#FFAB00"
+            android:textSize="35sp"
+            android:textStyle="bold" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/registration_background"
+        android:layout_marginTop="20dp"
+        android:layout_marginBottom="0dp"
+        android:layout_marginStart="15dp"
+        android:layout_marginEnd="15dp"
+        android:orientation="horizontal"
+        android:weight="1"
+        android:padding="5dp"
+        android:elevation="8dp">
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:src="@drawable/ic_register_name"
+            android:layout_marginStart="25dp"
+            android:weight="1"/>
+
+        <EditText
+            android:id="@+id/fullName_register_page"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="25dp"
+            android:backgroundTint="#0E0E0E"
+            android:hint="@string/name"
+            android:inputType="text"
+            android:weight="1"
+            android:textColor="@color/black"
+            android:textColorHighlight="#0E0E0E"
+            android:textColorHint="#090909"
+            android:textColorLink="#050505"
+            android:textSize="20sp"
+            android:textStyle="normal" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/registration_background"
+        android:layout_marginTop="20dp"
+        android:layout_marginBottom="0dp"
+        android:layout_marginStart="15dp"
+        android:layout_marginEnd="15dp"
+        android:orientation="horizontal"
+        android:weight="1"
+        android:padding="5dp"
+        android:elevation="8dp">
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:src="@drawable/ic_register_email"
+            android:weight="1"
+            android:layout_marginStart="25dp"/>
+
+        <EditText
+            android:id="@+id/emailID_register_page"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="25dp"
+            android:backgroundTint="#070707"
+            android:hint="@string/email"
+            android:inputType="textEmailAddress"
+            android:textColor="@color/black"
+            android:textColorHighlight="#070707"
+            android:textColorHint="#090909"
+            android:textColorLink="#0B0B0B"
+            android:textSize="20sp"
+            android:weight="1"
+            android:textStyle="normal" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/registration_background"
+        android:layout_marginTop="20dp"
+        android:layout_marginBottom="0dp"
+        android:layout_marginStart="15dp"
+        android:layout_marginEnd="15dp"
+        android:orientation="horizontal"
+        android:weight="1"
+        android:padding="5dp"
+        android:elevation="8dp">
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:src="@drawable/ic_register_password"
+            android:weight="1"
+            android:layout_marginStart="25dp"/>
+
+        <EditText
+            android:id="@+id/password_register_page"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="25dp"
+            android:backgroundTint="#050505"
+            android:hint="@string/password"
+            android:inputType="textPassword"
+            android:textColor="@color/black"
+            android:textColorHighlight="#090909"
+            android:textColorHint="#090909"
+            android:textColorLink="#090909"
+            android:textSize="20sp"
+            android:weight="1"
+            android:textStyle="normal" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/registration_background"
+        android:layout_marginTop="20dp"
+        android:layout_marginBottom="0dp"
+        android:layout_marginStart="15dp"
+        android:layout_marginEnd="15dp"
+        android:orientation="horizontal"
+        android:weight="1"
+        android:padding="5dp"
+        android:elevation="5dp">
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:src="@drawable/ic_register_phone"
+            android:weight="1"
+            android:layout_marginStart="25dp"/>
+
+        <EditText
+            android:id="@+id/phoneNumber_register_page"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="25dp"
+            android:backgroundTint="#090909"
+            android:hint="@string/phone_number"
+            android:inputType="phone"
+            android:textColor="@color/black"
+            android:textColorHighlight="#040404"
+            android:textColorHint="#090909"
+            android:textColorLink="#050505"
+            android:textSize="20sp"
+            android:weight="1"
+            android:textStyle="normal" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="30dp"
+        android:layout_marginBottom="0dp"
+        android:layout_marginStart="15dp"
+        android:layout_marginEnd="15dp"
+        android:orientation="horizontal"
+        android:weight="1"
+        android:padding="5dp"
+        android:elevation="8dp"
+        android:gravity="end">
+
+        <Button
+            android:id="@+id/registerButton_register_page"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/register"
+            android:textSize="25sp"
+            android:textStyle="bold"
+            android:textColor="@color/white"
+            android:weight="1"
+            android:backgroundTint="@color/design_default_color_error"/>
+
+    </LinearLayout>
+
+</LinearLayout>
