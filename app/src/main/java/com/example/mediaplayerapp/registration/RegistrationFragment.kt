@@ -1,5 +1,6 @@
 package com.example.mediaplayerapp.registration
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.util.Patterns
@@ -9,6 +10,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.example.mediaplayerapp.R
+import com.example.mediaplayerapp.dashboard.DashBoardActivity
 import com.example.mediaplayerapp.listeners.AuthenticationListener
 import com.example.mediaplayerapp.service.ValidatingAuthentication
 import com.google.firebase.auth.FirebaseAuth
@@ -17,7 +19,6 @@ import kotlinx.android.synthetic.main.fragment_registration.*
 class RegistrationFragment : Fragment(), View.OnClickListener {
 
     private lateinit var mAuthentication: FirebaseAuth
-
     private lateinit var validatingAuthentication: ValidatingAuthentication
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -43,6 +44,8 @@ class RegistrationFragment : Fragment(), View.OnClickListener {
 
     override fun onClick(view: View?) {
         userRegistration()
+        val intent: Intent = Intent(activity, DashBoardActivity::class.java)
+        activity?.startActivity(intent)
     }
 
     private fun userRegistration() {
@@ -90,6 +93,14 @@ class RegistrationFragment : Fragment(), View.OnClickListener {
                 Toast.makeText(context, "User Registration Failed",
                     Toast.LENGTH_SHORT).show()
             }
+        }
+
+        override fun onLogin(status: Boolean, exception: String?) {
+            TODO("Not yet implemented")
+        }
+
+        override fun onResetPassword(status: Boolean) {
+            TODO("Not yet implemented")
         }
 
     }

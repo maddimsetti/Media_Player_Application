@@ -9,9 +9,10 @@ import com.google.firebase.auth.FirebaseAuthUserCollisionException
 class ValidatingAuthentication {
 
     private lateinit var mAuthentication: FirebaseAuth
-    fun creatingUserRegistrationAccount(email: String, password: String, listener: AuthenticationListener) {
 
+    fun creatingUserRegistrationAccount(email: String, password: String, listener: AuthenticationListener) {
         mAuthentication = FirebaseAuth.getInstance()
+
         mAuthentication.createUserWithEmailAndPassword(email, password).addOnCompleteListener() { task ->
             if(task.isSuccessful) {
                 listener.onRegister(true, null)
@@ -27,6 +28,33 @@ class ValidatingAuthentication {
                         listener.onRegister(false, it)
                     }
                 }
+            }
+        }
+    }
+
+    fun userLoginIntoAccount(email: String, password: String, listener: AuthenticationListener) {
+        mAuthentication = FirebaseAuth.getInstance()
+
+        mAuthentication.signInWithEmailAndPassword(email, password).addOnCompleteListener() { task ->
+            if (task.isSuccessful) {
+                //Sign-In success, Update UI
+                Log.d(TAG, "userLoginIntoAccount: Success")
+                listener.onLogin(true, null)
+            } else {
+                //If Sign-In fails, display a message to the User
+                Log.w(TAG, "userLoginIntoAccount: failure", task.exception)
+                listener.onLogin(false, "User Login Account Failed")
+            }
+        }
+    }
+
+    fun userResetPasswordForSignIn(email: String, listener: AuthenticationListener) {
+        mAuthentication = FirebaseAuth.getInstance()
+
+        mAuthentication.sendPasswordResetEmail(email).addOnCompleteListener() { task ->
+            if(task.isSuccessful) {
+                Log.d(TAG, "userResetPasswordForSignIn: Success")
+                listener.onResetPassword(true)
             }
         }
     }
