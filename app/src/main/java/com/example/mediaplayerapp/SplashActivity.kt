@@ -5,7 +5,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import com.example.mediaplayerapp.registration.RegistrationActivity
+import com.example.mediaplayerapp.registration.MainActivity
 
 class SplashActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -13,7 +13,7 @@ class SplashActivity : AppCompatActivity() {
         setContentView(R.layout.activity_splash)
 
         Handler(Looper.getMainLooper()).postDelayed({
-            val intent = Intent(this, RegistrationActivity::class.java)
+            val intent = Intent(this, MainActivity::class.java)
             startActivity(intent)
             finish()
         },3000)  //3000 is the delayed time in milliseconds
