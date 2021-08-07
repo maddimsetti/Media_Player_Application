@@ -44,7 +44,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@drawable/registration_background"
-        android:elevation="20dp"
+        android:elevation="30dp"
         android:orientation="vertical">
 
         <LinearLayout
@@ -91,7 +91,7 @@
             android:layout_marginEnd="15dp"
             android:layout_marginBottom="0dp"
             android:background="@drawable/registration_background"
-            android:elevation="12dp"
+            android:elevation="30dp"
             android:orientation="horizontal"
             android:padding="5dp">
 

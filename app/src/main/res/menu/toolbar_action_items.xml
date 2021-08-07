@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/toolbar_search"
+        android:title="@string/search"
+        android:icon="@drawable/ic_search_icon_toolbar"
+        app:showAsAction="collapseActionView|ifRoom"
+        app:actionViewClass="androidx.appcompat.widget.SearchView"/>
+
+    <item
+        android:id="@+id/toolbar_upload_videos"
+        android:title="@string/upload_new_videos"
+        android:icon="@drawable/ic_toolbar_upload_videos"
+        app:showAsAction="always" />
+
+    <item
+        android:id="@+id/toolbar_profileImage"
+        android:title="@string/profile"
+        android:icon="@drawable/media_splash1"
+        app:showAsAction="ifRoom|withText"
+        app:actionLayout="@layout/toolbar_profile" />
+
+</menu>

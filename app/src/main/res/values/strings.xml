@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Media Player App</string>
+    <string name="app_name">  </string>
     <string name="media_player">MEDIA PLAYER</string>
     <string name="sign_up">       SIGN UP           </string>
     <string name="sign_in">       SIGN IN           </string>
@@ -13,4 +13,13 @@
     <string name="phone_number">Phone Number</string>
     <string name="login">LOGIN</string>
     <string name="forgot_password">Forgot Password?</string>
+    <string name="search">Search</string>
+    <string name="profile">PROFILE</string>
+    <string name="upload_new_videos">UPLOAD NEW VIDEOS</string>
+    <string name="profile_details">PROFILE DETAILS</string>
+    <string name="update">UPDATE</string>
+    <string name="cancel">CANCEL</string>
+    <string name="phone">PHONE :</string>
+
+
 </resources>

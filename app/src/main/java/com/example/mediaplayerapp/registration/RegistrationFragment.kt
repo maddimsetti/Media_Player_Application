@@ -44,7 +44,14 @@ class RegistrationFragment : Fragment(), View.OnClickListener {
 
     override fun onClick(view: View?) {
         userRegistration()
+        val name = fullName_register_page.text.toString()
+        val eMail = emailID_register_page.text.toString()
+        val phoneNumber = phoneNumber_register_page.text.toString()
+
         val intent: Intent = Intent(activity, DashBoardActivity::class.java)
+        intent.putExtra("NAME", name)
+        intent.putExtra("EMAIL", eMail)
+        intent.putExtra("PHONENUMBER", phoneNumber)
         activity?.startActivity(intent)
     }
 
