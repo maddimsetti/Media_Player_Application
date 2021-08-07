@@ -5,12 +5,12 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.util.Patterns
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.Toast
+import androidx.fragment.app.Fragment
 import com.example.mediaplayerapp.R
 import com.example.mediaplayerapp.dashboard.DashBoardActivity
 import com.example.mediaplayerapp.listeners.AuthenticationListener
@@ -18,7 +18,6 @@ import com.example.mediaplayerapp.registration.RegistrationFragment.Companion.TA
 import com.example.mediaplayerapp.service.ValidatingAuthentication
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
-import kotlinx.android.synthetic.main.dialog_forgot_password.*
 import kotlinx.android.synthetic.main.dialog_forgot_password.view.*
 import kotlinx.android.synthetic.main.fragment_login.*
 import kotlinx.android.synthetic.main.fragment_registration.*
@@ -98,10 +97,10 @@ class LoginFragment : Fragment(), View.OnClickListener {
         builder.setView(view)
         val alertDialog: AlertDialog = builder.create()
         alertDialog.setCanceledOnTouchOutside(false)
-        view.forgot_password_cancelBtn.setOnClickListener() {
+        view.forgot_password_cancelBtn.setOnClickListener {
             alertDialog.dismiss()
         }
-        view.forgot_password_resetBtn.setOnClickListener() {
+        view.forgot_password_resetBtn.setOnClickListener {
             userResetNewPassword(emailAddress)
             alertDialog.dismiss()
         }
