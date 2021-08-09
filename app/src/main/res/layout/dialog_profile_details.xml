@@ -33,13 +33,13 @@
         android:layout_marginTop="0dp"
         xmlns:app="http://schemas.android.com/apk/res-auto">
 
-        <ImageView
+        <de.hdodenhof.circleimageview.CircleImageView
             android:id="@+id/profile_details_image"
             android:layout_width="75dp"
             android:layout_height="75dp"
-            android:src="@drawable/media_splash1" />
-<!--            app:civ_border_color="@color/black"-->
-<!--            app:civ_border_width="1dp" />-->
+            android:src="@drawable/media_splash1"
+            app:civ_border_color="@color/black"
+            app:civ_border_width="1dp" />
 
     </LinearLayout>
 
@@ -143,25 +143,15 @@
         android:layout_marginBottom="30dp"
         android:orientation="horizontal">
 
-        <Button
-            android:id="@+id/profile_details_cancelBtn"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="20dp"
-            android:layout_weight="1"
-            android:backgroundTint="#090909"
-            android:text="@string/cancel"
-            android:textColor="#FAF6F6"
-            android:textSize="18sp"
-            android:textStyle="bold" />
+
 
         <Button
-            android:id="@+id/profile_details_updateBtn"
+            android:id="@+id/profile_details_OkayBtn"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:backgroundTint="#FAF7F7"
-            android:text="@string/update"
+            android:text="@string/ok"
             android:textColor="#0B0B0B"
             android:textSize="18sp"
             android:textStyle="bold" />

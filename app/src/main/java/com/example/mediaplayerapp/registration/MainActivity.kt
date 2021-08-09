@@ -21,7 +21,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        
+
+        FirebaseApp.initializeApp(applicationContext)
         mAuthentication = FirebaseAuth.getInstance()    //Initialize Firebase Authentication
 
         registration_signIn.setOnClickListener(this)

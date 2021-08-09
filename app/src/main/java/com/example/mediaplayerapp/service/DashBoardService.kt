@@ -14,31 +14,27 @@ import kotlinx.android.synthetic.main.dialog_profile_details.view.*
 
 class DashBoardService {
 
-    fun gettingUserProfileDetailsFromFirebase(
-        userProfileDetails: ProfileDetails?, listener: DashBoardListener) {
+    fun gettingUserProfileDetailsFromFirebase(listener: DashBoardListener) {
         val firebaseUser = FirebaseAuth.getInstance().currentUser
         val firebaseReference = FirebaseDatabase.getInstance().getReference("User Details")
-        var userID = firebaseUser?.uid
+        val userID = firebaseUser?.uid
 
         if (userID != null) {
             firebaseReference.child(userID)
                 .addListenerForSingleValueEvent(object : ValueEventListener {
                     override fun onDataChange(snapshot: DataSnapshot) {
-//                        val userProfileDetails: ProfileDetails? =
-//                            snapshot.getValue(ProfileDetails::class.java)
-                        snapshot.getValue(ProfileDetails::class.java)
+                        val userProfileDetails: ProfileDetails? = snapshot.getValue(ProfileDetails::class.java)
                         if (userProfileDetails != null) {
-                            listener.onRetrieveProfileDetailsFromFirebase(true)
-
-                            userProfileDetails.fullName
+                            val userFullName = userProfileDetails.fullName
                             val userEmailID = userProfileDetails.email
                             val userPhoneNumber = userProfileDetails.phoneNumber
 
+                            listener.onRetrieveProfileDetailsFromFirebase(true, userFullName, userEmailID, userPhoneNumber)
                         }
                     }
 
                     override fun onCancelled(error: DatabaseError) {
-                        listener.onRetrieveProfileDetailsFromFirebase(false)
+                        listener.onRetrieveProfileDetailsFromFirebase(false, "", "", "")
                         Log.w(TAG, "onCancelled: Failed")
                     }
 

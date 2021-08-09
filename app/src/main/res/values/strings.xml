@@ -20,6 +20,8 @@
     <string name="update">UPDATE</string>
     <string name="cancel">CANCEL</string>
     <string name="phone">PHONE :</string>
+    <string name="okay">Okay</string>
+    <string name="ok">ok</string>
 
 
 </resources>

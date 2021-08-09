@@ -1,5 +1,6 @@
 package com.example.mediaplayerapp.dashboard
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.ActivityNotFoundException
@@ -14,23 +15,24 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.widget.ImageView
-import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.MenuItemCompat
 import com.example.mediaplayerapp.R
-import com.example.mediaplayerapp.listeners.AuthenticationListener
 import com.example.mediaplayerapp.listeners.DashBoardListener
+import com.example.mediaplayerapp.listeners.ImageUploadingFirebaseListener
 import com.example.mediaplayerapp.listeners.PermissionsListener
 import com.example.mediaplayerapp.permission.Permissions
-import com.example.mediaplayerapp.pojoclass.ProfileDetails
 import com.example.mediaplayerapp.registration.RegistrationFragment.Companion.TAG
+import com.example.mediaplayerapp.service.DashBoardService
+import com.example.mediaplayerapp.service.ProfilePermissionService
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.database.*
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
+import com.squareup.picasso.Picasso
 import de.hdodenhof.circleimageview.CircleImageView
 import kotlinx.android.synthetic.main.activity_dash_board.*
 import kotlinx.android.synthetic.main.custom_toolbar.*
@@ -43,11 +45,21 @@ import java.io.ByteArrayOutputStream
 
 
 class DashBoardActivity : AppCompatActivity() {
+    private lateinit var dashBoardService: DashBoardService
+    private lateinit var profilePermissionService: ProfilePermissionService
+
     private val CAMERA_REQUEST_CODE = 1001
     private val GALLERY_REQUEST_CODE = 2001
     private lateinit var permissionForCaptureImage: Permissions
-//    lateinit var profileImage: ImageView
+    private lateinit var view: View
+    private lateinit var profileImage: CircleImageView
 
+    private lateinit var viewToolbar: View
+    private lateinit var toolBarProfileImage: CircleImageView
+
+    private lateinit var mAuthentication: FirebaseAuth //Firebase Authentication
+
+    @SuppressLint("InflateParams")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_dash_board)
@@ -55,9 +67,32 @@ class DashBoardActivity : AppCompatActivity() {
         setSupportActionBar(custom_toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(false)
         custom_toolbar.showOverflowMenu()
+        mAuthentication = FirebaseAuth.getInstance()
+
+        dashBoardService = DashBoardService() //Initialize the DashBoard Service
+        profilePermissionService = ProfilePermissionService() //Initialize the ProfilePermissionService
 
         permissionForCaptureImage = Permissions() //permissions class
-//        profileImage = findViewById(R.id.profile_details_image)
+        view = layoutInflater.inflate(R.layout.dialog_profile_details, null)
+        profileImage = view.profile_details_image as CircleImageView
+
+//        viewToolbar = menuInflater.inflate(R.menu.toolbar_action_items, null) as View
+//        toolBarProfileImage = viewToolbar.toolbar_profile_image as CircleImageView
+    }
+
+    override fun onStart() {
+        super.onStart()
+        val currentUser = mAuthentication.currentUser
+        updateUI(currentUser)
+    }
+
+    private fun updateUI(currentUser: FirebaseUser?) {
+        if (currentUser?.photoUrl != null) {
+            Picasso.with(this@DashBoardActivity).load(currentUser.photoUrl).into(profileImage)
+//            Picasso.with(this@DashBoardActivity).load(currentUser.photoUrl).into(toolBarProfileImage)
+
+        }
+
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -95,58 +130,32 @@ class DashBoardActivity : AppCompatActivity() {
 
     private fun viewUserProfileDetails() {
         val builder = AlertDialog.Builder(this@DashBoardActivity)
-        val view = layoutInflater.inflate(R.layout.dialog_profile_details, null)
 
-        val firebaseUser = FirebaseAuth.getInstance().currentUser
-        val firebaseReference = FirebaseDatabase.getInstance().getReference("User Details")
-        val userID = firebaseUser?.uid
-
-        if (userID != null) {
-            firebaseReference.child(userID)
-                .addListenerForSingleValueEvent(object : ValueEventListener {
-                    override fun onDataChange(snapshot: DataSnapshot) {
-                        val userProfileDetails: ProfileDetails? =
-                            snapshot.getValue(ProfileDetails::class.java)
-                        if (userProfileDetails != null) {
-                            val userFullName = userProfileDetails.fullName
-                            val userEmailID = userProfileDetails.email
-                            val userPhoneNumber = userProfileDetails.phoneNumber
-
-                            view.profile_details_name.text = userFullName
-                            view.profile_details_email.text = userEmailID
-                            view.profile_details_phone.text = userPhoneNumber
-                        }
-                    }
-
-                    override fun onCancelled(error: DatabaseError) {
-                        Toast.makeText(
-                            this@DashBoardActivity, "Fetching the Data From Firebase Failed",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
-
-                })
-        }
-        view.profile_details_image.setOnClickListener() {
+        dashBoardService.gettingUserProfileDetailsFromFirebase(profileListener)
+        profileImage.setOnClickListener() {
             selectingImage()
         }
         builder.setView(view)
         val alertDialog: AlertDialog = builder.create()
         alertDialog.setCanceledOnTouchOutside(false)
-        view.profile_details_cancelBtn.setOnClickListener {
-            alertDialog.dismiss()
-        }
-        view.profile_details_updateBtn.setOnClickListener {
+
+        view.profile_details_OkayBtn.setOnClickListener {
             alertDialog.dismiss()
         }
         alertDialog.show()
+//        view.dialog_profile_details.removeView(view)
+
     }
 
-
-    private val listener: DashBoardListener = object : DashBoardListener {
-        override fun onRetrieveProfileDetailsFromFirebase(status: Boolean) {
+    private val profileListener: DashBoardListener = object : DashBoardListener {
+        override fun onRetrieveProfileDetailsFromFirebase(status: Boolean,
+            fullName: String?, eMailID: String?, phoneNumber: String?
+        ) {
             if (status) {
                 Log.d(TAG, "onRetrieveProfileDetailsFromFirebase: Success $status")
+                view.profile_details_name.text = fullName
+                view.profile_details_email.text = eMailID
+                view.profile_details_phone.text = phoneNumber
 
             } else {
                 Toast.makeText(this@DashBoardActivity, "Fetching the Data From Firebase Failed", Toast.LENGTH_SHORT).show()
@@ -160,7 +169,7 @@ class DashBoardActivity : AppCompatActivity() {
         pictureDialog.setTitle("Select Action")
         val pictureDialogItem =
             arrayOf("Select photo from Gallery", "Capture Photo from Camera")
-        pictureDialog.setItems(pictureDialogItem) { dialog, selection ->
+        pictureDialog.setItems(pictureDialogItem) { _, selection ->
             when (selection) {
                 0 -> permissionForCaptureImage.galleryCheckPermission(this@DashBoardActivity, permissionListeners)
                 1 -> permissionForCaptureImage.cameraCheckPermission(this@DashBoardActivity, permissionListeners)
@@ -252,59 +261,21 @@ class DashBoardActivity : AppCompatActivity() {
 
     private fun gettingDataAsBitmap(data: Intent?) {
         val bitmap = data?.extras?.get("data") as? Bitmap
-        val view = layoutInflater.inflate(R.layout.dialog_profile_details, null)
-        view.profile_details_image.setImageBitmap(bitmap)
+        profileImage.setImageBitmap(bitmap)
         if (bitmap != null) {
-            handleUpload(bitmap)
+            profilePermissionService.handleUpload(bitmap, uploadingImageListener)
         }
     }
 
-    private fun handleUpload(bitmap: Bitmap) {
-
-        val boas = ByteArrayOutputStream()
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, boas)
-
-        val uid = FirebaseAuth.getInstance().currentUser?.uid
-        val reference: StorageReference = FirebaseStorage.getInstance().reference
-            .child("ProfileImages")
-            .child("$uid.jpeg")
-
-        reference.putBytes(boas.toByteArray()).addOnSuccessListener {
-            getDownloadUrl(reference)
-        }
-            .addOnFailureListener {
-                Log.e(TAG, "OnFailure: ", it)
+    private val uploadingImageListener: ImageUploadingFirebaseListener = object : ImageUploadingFirebaseListener {
+        override fun onProfileImageUploadingToFirebase(status: Boolean) {
+            if(status) {
+                Toast.makeText(this@DashBoardActivity, "Uploading and Setting Profile Succeeded $status",
+                    Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this@DashBoardActivity, "Failed Uploading and Setting Profile $status",
+                    Toast.LENGTH_SHORT).show()
             }
-    }
-
-
-    private fun getDownloadUrl(reference: StorageReference) {
-        reference.downloadUrl.addOnSuccessListener { uri ->
-            Log.d("DownloadUrl", "OnSuccess$uri")
-            setUserProfileUrl(uri)
         }
     }
-
-    private fun setUserProfileUrl(uri: Uri?) {
-        val user = FirebaseAuth.getInstance().currentUser
-
-        val request = UserProfileChangeRequest.Builder().setPhotoUri(uri).build()
-
-        user?.updateProfile(request)?.addOnSuccessListener {
-            Toast.makeText(
-                this@DashBoardActivity,
-                "Successfully Uploaded",
-                Toast.LENGTH_SHORT
-            ).show()
-        }
-            ?.addOnFailureListener {
-                Toast.makeText(
-                    this@DashBoardActivity,
-                    "Uploading Failed...",
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
-
-    }
-
 }
