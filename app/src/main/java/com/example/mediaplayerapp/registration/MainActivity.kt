@@ -1,5 +1,6 @@
 package com.example.mediaplayerapp.registration
 
+import android.app.Application
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -7,6 +8,7 @@ import android.view.View
 import android.widget.Toast
 import com.example.mediaplayerapp.R
 import com.example.mediaplayerapp.dashboard.DashBoardActivity
+import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import kotlinx.android.synthetic.main.activity_main.*
@@ -19,7 +21,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
+        
         mAuthentication = FirebaseAuth.getInstance()    //Initialize Firebase Authentication
 
         registration_signIn.setOnClickListener(this)

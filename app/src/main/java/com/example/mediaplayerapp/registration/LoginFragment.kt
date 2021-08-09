@@ -27,6 +27,8 @@ class LoginFragment : Fragment(), View.OnClickListener {
     private lateinit var mAuthentication: FirebaseAuth
     private lateinit var validatingAuthentication: ValidatingAuthentication
 
+    private var isAllValidationChecked: Boolean = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -53,9 +55,11 @@ class LoginFragment : Fragment(), View.OnClickListener {
     override fun onClick(view: View?) {
         when(view?.id) {
             R.id.loginButton_login_page -> {
-                userLoginUsingFirebase()
-                val intent: Intent = Intent(activity, DashBoardActivity::class.java)
-                activity?.startActivity(intent)
+                isAllValidationChecked = userLoginValidation()
+                if(isAllValidationChecked) {
+                    userLoginUsingFirebase()
+                }
+
             }
 
             R.id.forgotPassword_login_page -> {
@@ -64,29 +68,36 @@ class LoginFragment : Fragment(), View.OnClickListener {
         }
     }
 
-    private fun userLoginUsingFirebase() {
+    private fun userLoginValidation(): Boolean {
         val email = email_login_page.text.toString().trim()
         val password = password_login_page.text.toString().trim()
 
-        if(email.isEmpty()
-            && password.isEmpty()) {
-
-            Toast.makeText(context, "Please Enter the Required Fields", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        if(!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+        if(email.isEmpty()) {
+            email_login_page.error = "Please Enter Email Address"
+            email_login_page.requestFocus()
+            return false
+        } else if(!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
             email_login_page.error = "Please Enter the Valid Email Address"
             email_login_page.requestFocus()
-            return
+            return false
         }
 
-        if(password.length < 8) {
+        if(password.isEmpty()) {
+            password_login_page.error = "Please Enter Password"
+            password_login_page.requestFocus()
+            return false
+        } else if(password.length < 8) {
             password_login_page.error = "Minimum length should be 8 characters"
             password_login_page.requestFocus()
-            return
+            return false
         }
-        validatingAuthentication.userLoginIntoAccount(email, password, listener)
+
+        return true
+    }
+
+    private fun userLoginUsingFirebase() {
+        validatingAuthentication.userLoginIntoAccount(email_login_page.text.toString(),
+            password_login_page.text.toString(), listener)
 
     }
 
@@ -130,6 +141,10 @@ class LoginFragment : Fragment(), View.OnClickListener {
                 Log.d(TAG, "SignInWithEmailAddress: Success $status")
                 Toast.makeText(context, "Login Authentication Succeeded", Toast.LENGTH_SHORT)
                     .show()
+
+                val intent: Intent = Intent(activity, DashBoardActivity::class.java)
+                activity?.startActivity(intent)
+
             } else {
                 // If sign in fails, display a message to the user.
                 Log.d(TAG, "SignInWithEmailAddress: Failed $status")

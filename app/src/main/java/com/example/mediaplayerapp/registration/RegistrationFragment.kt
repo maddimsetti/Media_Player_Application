@@ -12,14 +12,21 @@ import androidx.fragment.app.Fragment
 import com.example.mediaplayerapp.R
 import com.example.mediaplayerapp.dashboard.DashBoardActivity
 import com.example.mediaplayerapp.listeners.AuthenticationListener
+import com.example.mediaplayerapp.pojoclass.ProfileDetails
 import com.example.mediaplayerapp.service.ValidatingAuthentication
+import com.google.android.gms.tasks.OnCompleteListener
+import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.ktx.Firebase
 import kotlinx.android.synthetic.main.fragment_registration.*
 
 class RegistrationFragment : Fragment(), View.OnClickListener {
 
     private lateinit var mAuthentication: FirebaseAuth
     private lateinit var validatingAuthentication: ValidatingAuthentication
+
+    private var isAllFieldsChecked: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,45 +50,72 @@ class RegistrationFragment : Fragment(), View.OnClickListener {
     }
 
     override fun onClick(view: View?) {
-        userRegistration()
-        val name = fullName_register_page.text.toString()
-        val eMail = emailID_register_page.text.toString()
-        val phoneNumber = phoneNumber_register_page.text.toString()
 
-        val intent: Intent = Intent(activity, DashBoardActivity::class.java)
-        intent.putExtra("NAME", name)
-        intent.putExtra("EMAIL", eMail)
-        intent.putExtra("PHONENUMBER", phoneNumber)
-        activity?.startActivity(intent)
+        when(view?.id) {
+            R.id.registerButton_register_page -> {
+                isAllFieldsChecked = userRegisterValidation()
+                if(isAllFieldsChecked) {
+                    userRegistration()
+                }
+            }
+
+            else -> null
+        }
+
     }
 
-    private fun userRegistration() {
+    private fun userRegisterValidation(): Boolean {
         val name = fullName_register_page.text.toString().trim()
         val email = emailID_register_page.text.toString().trim()
         val password = password_register_page.text.toString().trim()
         val phoneNumber = phoneNumber_register_page.text.toString().trim()
 
-
-        if(name.isEmpty() && email.isEmpty()
-            && password.isEmpty() && phoneNumber.isEmpty()) {
-
-            Toast.makeText(context, "Please Enter the Required Fields", Toast.LENGTH_SHORT).show()
-            return
+        if(name.isEmpty()) {
+            fullName_register_page.error = "Please Enter Your Name"
+            fullName_register_page.requestFocus()
+            return false
         }
 
-        if(!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+        if(email.isEmpty()) {
+            emailID_register_page.error = "Please Enter Email Address"
+            emailID_register_page.requestFocus()
+            return false
+        } else if(!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
             emailID_register_page.error = "Please Enter the Valid Email Address"
             emailID_register_page.requestFocus()
-            return
+            return false
         }
 
-        if(password.length < 8) {
+        if(password.isEmpty()) {
+            password_register_page.error = "Please Enter Password"
+            password_register_page.requestFocus()
+            return false
+        } else if(password.length < 8) {
             password_register_page.error = "Minimum length should be 8 characters"
             password_register_page.requestFocus()
-            return
+            return false
         }
 
-        validatingAuthentication.creatingUserRegistrationAccount(email, password, listener)
+        if(phoneNumber.isEmpty()) {
+            phoneNumber_register_page.error = "Please Enter Email Address"
+            phoneNumber_register_page.requestFocus()
+            return false
+        }
+        return if(phoneNumber.length == 10) {
+            true
+        } else {
+            phoneNumber_register_page.error = "Phone Number should contains 10 digits"
+            phoneNumber_register_page.requestFocus()
+            false
+        }
+
+        return true
+    }
+
+    private fun userRegistration() {
+        validatingAuthentication.creatingUserRegistrationAccount(emailID_register_page.text.toString(),
+                password_register_page.text.toString(), listener)
+
     }
 
     private  val listener: AuthenticationListener = object: AuthenticationListener {
@@ -91,13 +125,30 @@ class RegistrationFragment : Fragment(), View.OnClickListener {
                 Log.d(TAG, "CreatingUserWithEmail: Success $status ")
                 Toast.makeText(context, "User Registration Succeeded",
                     Toast.LENGTH_SHORT).show()
+
+                val name = fullName_register_page.text.toString()
+                val eMail = emailID_register_page.text.toString()
+                val phoneNumber = phoneNumber_register_page.text.toString()
+
+                val profileList = ProfileDetails(name, eMail, phoneNumber)
+//                val profileDetails = mutableListOf<ProfileDetails>()
+//                profileDetails.add(profileList)
+
+                FirebaseAuth.getInstance().currentUser?.uid?.let {
+                    FirebaseDatabase.getInstance().getReference("User Details")
+                        .child(it).setValue(profileList)
+                }
+
+                val intent: Intent = Intent(activity, DashBoardActivity::class.java)
+                activity?.startActivity(intent)
+
                 fullName_register_page.text.clear()
                 emailID_register_page.text.clear()
                 password_register_page.text.clear()
                 phoneNumber_register_page.text.clear()
             } else {
                 Log.d(TAG, "CreatingUserWithEmail: Failed")
-                Toast.makeText(context, "User Registration Failed",
+                Toast.makeText(context, exception,
                     Toast.LENGTH_SHORT).show()
             }
         }
