@@ -1,11 +1,11 @@
 package com.example.mediaplayerapp.dashboard
 
-import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
@@ -26,12 +26,10 @@ import com.example.mediaplayerapp.permission.Permissions
 import com.example.mediaplayerapp.registration.RegistrationFragment.Companion.TAG
 import com.example.mediaplayerapp.service.DashBoardService
 import com.example.mediaplayerapp.service.ProfilePermissionService
+import com.example.mediaplayerapp.uripath.URIPathHelper
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.database.*
-import com.google.firebase.storage.FirebaseStorage
-import com.google.firebase.storage.StorageReference
 import com.squareup.picasso.Picasso
 import de.hdodenhof.circleimageview.CircleImageView
 import kotlinx.android.synthetic.main.activity_dash_board.*
@@ -41,25 +39,23 @@ import kotlinx.android.synthetic.main.dialog_profile_details.*
 import kotlinx.android.synthetic.main.dialog_profile_details.view.*
 import kotlinx.android.synthetic.main.toolbar_profile.*
 import kotlinx.android.synthetic.main.toolbar_profile.view.*
-import java.io.ByteArrayOutputStream
 
 
 class DashBoardActivity : AppCompatActivity() {
     private lateinit var dashBoardService: DashBoardService
     private lateinit var profilePermissionService: ProfilePermissionService
+    private lateinit var permissionForCaptureImage: Permissions
 
     private val CAMERA_REQUEST_CODE = 1001
     private val GALLERY_REQUEST_CODE = 2001
-    private lateinit var permissionForCaptureImage: Permissions
+    private val VIDEO_REQUEST_CODE = 1431
+    private val VIDEO_CAMERA_REQUEST_CODE = 1234
     private lateinit var view: View
     private lateinit var profileImage: CircleImageView
 
-    private lateinit var viewToolbar: View
-    private lateinit var toolBarProfileImage: CircleImageView
-
     private lateinit var mAuthentication: FirebaseAuth //Firebase Authentication
+    private lateinit var currentUser: FirebaseUser //currentUser Initializing
 
-    @SuppressLint("InflateParams")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_dash_board)
@@ -67,7 +63,9 @@ class DashBoardActivity : AppCompatActivity() {
         setSupportActionBar(custom_toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(false)
         custom_toolbar.showOverflowMenu()
+
         mAuthentication = FirebaseAuth.getInstance()
+        currentUser = mAuthentication.currentUser!!
 
         dashBoardService = DashBoardService() //Initialize the DashBoard Service
         profilePermissionService = ProfilePermissionService() //Initialize the ProfilePermissionService
@@ -76,21 +74,16 @@ class DashBoardActivity : AppCompatActivity() {
         view = layoutInflater.inflate(R.layout.dialog_profile_details, null)
         profileImage = view.profile_details_image as CircleImageView
 
-//        viewToolbar = menuInflater.inflate(R.menu.toolbar_action_items, null) as View
-//        toolBarProfileImage = viewToolbar.toolbar_profile_image as CircleImageView
     }
 
     override fun onStart() {
         super.onStart()
-        val currentUser = mAuthentication.currentUser
         updateUI(currentUser)
     }
 
     private fun updateUI(currentUser: FirebaseUser?) {
         if (currentUser?.photoUrl != null) {
             Picasso.with(this@DashBoardActivity).load(currentUser.photoUrl).into(profileImage)
-//            Picasso.with(this@DashBoardActivity).load(currentUser.photoUrl).into(toolBarProfileImage)
-
         }
 
     }
@@ -102,9 +95,13 @@ class DashBoardActivity : AppCompatActivity() {
         val view: View = MenuItemCompat.getActionView(menuItem)
 
         val profile = view.toolbar_profile_image
+        if (currentUser?.photoUrl != null) {
+            Picasso.with(this@DashBoardActivity).load(currentUser.photoUrl).into(profile)
+        }
 
         profile.setOnClickListener {
             viewUserProfileDetails()
+
             Toast.makeText(this@DashBoardActivity, "Profile Image Selected", Toast.LENGTH_SHORT)
                 .show()
         }
@@ -119,7 +116,7 @@ class DashBoardActivity : AppCompatActivity() {
             }
 
             R.id.toolbar_upload_videos -> {
-                selectingImage()
+                selectingVideoToUpload()
                 Toast.makeText(this@DashBoardActivity, "Uploading New Content", Toast.LENGTH_SHORT)
                     .show()
 
@@ -161,7 +158,6 @@ class DashBoardActivity : AppCompatActivity() {
                 Toast.makeText(this@DashBoardActivity, "Fetching the Data From Firebase Failed", Toast.LENGTH_SHORT).show()
             }
         }
-
     }
 
     private fun selectingImage() {
@@ -212,6 +208,54 @@ class DashBoardActivity : AppCompatActivity() {
 
     }
 
+    private fun selectingVideoToUpload() {
+        val pictureDialog = androidx.appcompat.app.AlertDialog.Builder(this)
+        pictureDialog.setTitle("Select Action")
+        val pictureDialogItem =
+            arrayOf("Upload Video from Gallery", "Record Video from Camera")
+        pictureDialog.setItems(pictureDialogItem) { _, selection ->
+            when (selection) {
+                0 -> permissionForCaptureImage.galleryCheckPermission(this@DashBoardActivity, permissionForUploadingContentListener)
+                1 -> permissionForCaptureImage.cameraCheckPermission(this@DashBoardActivity, permissionForUploadingContentListener)
+            }
+        }
+        pictureDialog.show()
+    }
+
+    private val permissionForUploadingContentListener: PermissionsListener = object : PermissionsListener {
+
+        override fun checkPermissionForGallery(status: Boolean, context: Context) {
+            if(status) {
+                selectVideoContentToUpload()
+                Log.d(TAG, "checkPermissionForGallery: Success $status")
+            } else {
+                Log.d(TAG, "checkPermissionForGallery: Failure $status")
+                Toast.makeText(
+                    applicationContext, "You have denied the storage to select Image",
+                    Toast.LENGTH_SHORT
+                ).show()
+
+                showRotationalDialogForPermission(context)
+            }
+        }
+
+        override fun checkPermissionForCamera(status: Boolean, context: Context) {
+            if(status) {
+                openCameraToCaptureVideo()
+                Log.d(TAG, "checkPermissionForGallery: Success $status")
+            } else {
+                Log.d(TAG, "checkPermissionForGallery: Failure $status")
+                Toast.makeText(
+                    applicationContext, "You have denied the storage to select Image",
+                    Toast.LENGTH_SHORT
+                ).show()
+
+                showRotationalDialogForPermission(context)
+            }
+        }
+
+    }
+
     private fun showRotationalDialogForPermission(context: Context) {
         android.app.AlertDialog.Builder(context).setMessage(
             "It looks like you have turned off Permissions"
@@ -243,6 +287,21 @@ class DashBoardActivity : AppCompatActivity() {
         startActivityForResult(intent, CAMERA_REQUEST_CODE)
     }
 
+    private fun selectVideoContentToUpload() {
+        val intent = Intent()
+        intent.type = "video/*"
+        intent.action = Intent.ACTION_PICK
+        startActivityForResult(Intent.createChooser(intent, "Select Video"),VIDEO_REQUEST_CODE)
+    }
+
+    private fun openCameraToCaptureVideo() {
+        if (packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY)) { // First check if camera is available in the device
+            val intent = Intent(MediaStore.ACTION_VIDEO_CAPTURE)
+            startActivityForResult(intent, VIDEO_CAMERA_REQUEST_CODE);
+        }
+    }
+
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
@@ -254,6 +313,40 @@ class DashBoardActivity : AppCompatActivity() {
 
                 GALLERY_REQUEST_CODE -> {
                     gettingDataAsBitmap(data)
+                }
+
+                VIDEO_REQUEST_CODE -> {
+                    if (data?.data != null) {
+                        val uriPathHelper = URIPathHelper()
+                        val videoFullPath = uriPathHelper.getPath(this@DashBoardActivity, data?.data!!)
+
+                        supportFragmentManager.beginTransaction().setReorderingAllowed(true)
+                            .addToBackStack(null).replace(R.id.dashBoard_fragment_container, UploadingContentVideoFragment()).commit()
+
+                        val bundle = Bundle()
+                        bundle.putString("videoFullPath", videoFullPath)
+                        // set FragmentClass Arguments
+                        val fragmentObj = UploadingContentVideoFragment()
+                        fragmentObj.arguments = bundle
+
+                    }
+                }
+
+                VIDEO_CAMERA_REQUEST_CODE -> {
+                    if (data?.data != null) {
+                        val uriPathHelper = URIPathHelper()
+                        val videoFullPath = uriPathHelper.getPath(this@DashBoardActivity, data?.data!!)
+
+                        supportFragmentManager.beginTransaction().setReorderingAllowed(true)
+                            .addToBackStack(null).replace(R.id.dashBoard_fragment_container, UploadingContentVideoFragment()).commit()
+
+                        val bundle = Bundle()
+                        bundle.putString("videoFullPath", videoFullPath)
+                        // set FragmentClass Arguments
+                        val fragmentObj = UploadingContentVideoFragment()
+                        fragmentObj.arguments = bundle
+
+                    }
                 }
             }
         }

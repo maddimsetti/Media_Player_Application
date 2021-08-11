@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:background="@drawable/dashboard_toolbar_background"
+    tools:context=".dashboard.UploadingContentVideoFragment"
+    tools:openDrawer="start">
+
+    <ScrollView
+        android:id="@+id/upload_content_scrollView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="25dp"
+        app:layout_anchorGravity="center"
+        android:clipToPadding="false"
+        android:paddingBottom="10dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" >
+
+            <include layout="@layout/upload_content_toolbar" />
+
+            <VideoView
+                android:id="@+id/content_upload_new_video"
+                android:layout_width="match_parent"
+                android:layout_height="300dp"
+                android:layout_marginTop="5dp"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginTop="20dp"
+                android:layout_marginBottom="30dp"
+                android:background="@drawable/dashboard_toolbar_background"
+                android:elevation="1dp"
+                android:orientation="vertical">
+
+                <EditText
+                    android:id="@+id/content_upload_title"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="20dp"
+                    android:layout_marginTop="70dp"
+                    android:layout_marginEnd="20dp"
+                    android:layout_marginBottom="10dp"
+                    android:backgroundTint="#F60471"
+                    android:hint="@string/title"
+                    android:maxLines="2"
+                    android:textAlignment="textStart"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Widget.ActionBar.Title"
+                    android:textColor="@color/black"
+                    android:textColorHighlight="#050505"
+                    android:textColorHint="#070707"
+                    android:textColorLink="#050505"
+                    android:textSize="22sp"
+                    android:textStyle="italic" />
+
+                <EditText
+                    android:id="@+id/content_upload_description"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="20dp"
+                    android:layout_marginTop="40dp"
+                    android:layout_marginEnd="20dp"
+                    android:layout_marginBottom="10dp"
+                    android:backgroundTint="#F60471"
+                    android:hint="@string/description"
+                    android:maxLines="10"
+                    android:textAlignment="textStart"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Widget.ActionBar.Title"
+                    android:textColor="@color/black"
+                    android:textColorHighlight="#040404"
+                    android:textColorHint="#050505"
+                    android:textColorLink="#040404"
+                    android:textIsSelectable="true"
+                    android:textSize="20sp"
+                    android:textStyle="normal" />
+
+                <TextView
+                    android:id="@+id/content_upload_dateTime"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:hint="Date Time"
+                    android:maxLines="1"
+                    android:textColor="@color/design_default_color_error"
+                    android:textSize="25dp"
+                    android:textStyle="bold"
+                    android:layout_marginTop="30dp"
+                    android:layout_marginBottom="20dp"/>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </ScrollView>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

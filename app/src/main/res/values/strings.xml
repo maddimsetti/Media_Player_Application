@@ -22,6 +22,8 @@
     <string name="phone">PHONE :</string>
     <string name="okay">Okay</string>
     <string name="ok">ok</string>
+    <string name="title">Title</string>
+    <string name="description">Description</string>
 
 
 </resources>
