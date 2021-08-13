@@ -19,6 +19,7 @@ import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.ktx.Firebase
+import kotlinx.android.synthetic.main.custom_toolbar.*
 import kotlinx.android.synthetic.main.fragment_registration.*
 
 class RegistrationFragment : Fragment(), View.OnClickListener {
@@ -30,7 +31,6 @@ class RegistrationFragment : Fragment(), View.OnClickListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
     }
 
     override fun onCreateView(
@@ -131,9 +131,6 @@ class RegistrationFragment : Fragment(), View.OnClickListener {
                 val phoneNumber = phoneNumber_register_page.text.toString()
 
                 val profileList = ProfileDetails(name, eMail, phoneNumber)
-//                val profileDetails = mutableListOf<ProfileDetails>()
-//                profileDetails.add(profileList)
-
                 FirebaseAuth.getInstance().currentUser?.uid?.let {
                     FirebaseDatabase.getInstance().getReference("User Details")
                         .child(it).setValue(profileList)

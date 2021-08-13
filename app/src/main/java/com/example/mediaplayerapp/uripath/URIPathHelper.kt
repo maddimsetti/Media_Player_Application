@@ -12,7 +12,7 @@ import android.provider.MediaStore
 class URIPathHelper {
 
     fun getPath(context: Context, uri: Uri): String? {
-        val isKitKatorAbove = Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT
+        val isKitKatorAbove = Build.VERSION.SDK_INT >= 31
 
         //Document Provider
         if(isKitKatorAbove && DocumentsContract.isDocumentUri(context, uri)) {
@@ -43,8 +43,19 @@ class URIPathHelper {
                 }
                 val selection = "_id=?"
                 val selectionArgs = arrayOf(split[1])
-                return getDataColumn(context, uri, selection, selectionArgs)
+                return contentUri?.let { getDataColumn(context, it, selection, selectionArgs) }
 
+            }  else if ("content" == uri.scheme) {
+
+                // Return the remote address
+                if (isGooglePhotosUri(uri))
+                    return uri.lastPathSegment;
+
+                return getDataColumn(context, uri, null, null);
+            }
+            // File
+            else if ("file" == uri.scheme) {
+                return uri.path;
             }
         }
         return null
@@ -53,9 +64,15 @@ class URIPathHelper {
     fun getDataColumn(context: Context, uri: Uri, selection: String?, selectionArgs: Array<String>?): String? {
         var cursor: Cursor? = null
         val column = "_data"
-        val projection = arrayOf(column)
+        val projection = arrayOf(MediaStore.Video.Media.CONTENT_TYPE,
+            MediaStore.Video.Media.TITLE,
+            MediaStore.Video.Media.DISPLAY_NAME,
+            MediaStore.Video.Media.DURATION,
+            MediaStore.Video.Media.SIZE,
+            MediaStore.Video.Media.DESCRIPTION)
+        val SORT_ORDER = MediaStore.Video.Media.DATE_ADDED
         try {
-            cursor = context.contentResolver.query(uri, projection, selection, selectionArgs, null)
+            cursor = context.contentResolver.query(uri, projection, selection, selectionArgs, SORT_ORDER)
             if(cursor != null && cursor.moveToFirst()) {
                 val column_index: Int = cursor.getColumnIndexOrThrow(column)
                 return cursor.getString(column_index)
@@ -76,5 +93,13 @@ class URIPathHelper {
 
     private fun isMediaDocument(uri: Uri): Boolean {
         return "com.android.providers.media.documents" == uri.authority
+    }
+
+    /**
+     * @param uri The Uri to check.
+     * @return Whether the Uri authority is Google Photos.
+     */
+    private fun isGooglePhotosUri(uri: Uri): Boolean {
+        return "com.google.android.apps.photos.content" == uri.authority
     }
 }

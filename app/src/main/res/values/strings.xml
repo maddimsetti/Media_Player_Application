@@ -24,6 +24,8 @@
     <string name="ok">ok</string>
     <string name="title">Title</string>
     <string name="description">Description</string>
+    <string name="createnewvideo">CreateNewVideo</string>
+    <string name="savecontentvideo">SaveContentVideo</string>
 
 
 </resources>

@@ -12,9 +12,7 @@ import android.os.Bundle
 import android.provider.MediaStore
 import android.provider.Settings
 import android.util.Log
-import android.view.Menu
-import android.view.MenuItem
-import android.view.View
+import android.view.*
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.MenuItemCompat
@@ -26,7 +24,7 @@ import com.example.mediaplayerapp.permission.Permissions
 import com.example.mediaplayerapp.registration.RegistrationFragment.Companion.TAG
 import com.example.mediaplayerapp.service.DashBoardService
 import com.example.mediaplayerapp.service.ProfilePermissionService
-import com.example.mediaplayerapp.uripath.URIPathHelper
+import com.example.mediaplayerapp.uripath.*
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.database.*
@@ -48,8 +46,7 @@ class DashBoardActivity : AppCompatActivity() {
 
     private val CAMERA_REQUEST_CODE = 1001
     private val GALLERY_REQUEST_CODE = 2001
-    private val VIDEO_REQUEST_CODE = 1431
-    private val VIDEO_CAMERA_REQUEST_CODE = 1234
+
     private lateinit var view: View
     private lateinit var profileImage: CircleImageView
 
@@ -116,10 +113,10 @@ class DashBoardActivity : AppCompatActivity() {
             }
 
             R.id.toolbar_upload_videos -> {
-                selectingVideoToUpload()
-                Toast.makeText(this@DashBoardActivity, "Uploading New Content", Toast.LENGTH_SHORT)
-                    .show()
-
+                supportFragmentManager.beginTransaction()
+                    .replace(R.id.dashBoard_fragment_container, UploadingContentVideoFragment())
+                    .commit()
+                Toast.makeText(this@DashBoardActivity, "content Upload", Toast.LENGTH_SHORT).show()
             }
         }
         return true
@@ -145,7 +142,8 @@ class DashBoardActivity : AppCompatActivity() {
     }
 
     private val profileListener: DashBoardListener = object : DashBoardListener {
-        override fun onRetrieveProfileDetailsFromFirebase(status: Boolean,
+        override fun onRetrieveProfileDetailsFromFirebase(
+            status: Boolean,
             fullName: String?, eMailID: String?, phoneNumber: String?
         ) {
             if (status) {
@@ -155,7 +153,11 @@ class DashBoardActivity : AppCompatActivity() {
                 view.profile_details_phone.text = phoneNumber
 
             } else {
-                Toast.makeText(this@DashBoardActivity, "Fetching the Data From Firebase Failed", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    this@DashBoardActivity,
+                    "Fetching the Data From Firebase Failed",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }
     }
@@ -167,8 +169,12 @@ class DashBoardActivity : AppCompatActivity() {
             arrayOf("Select photo from Gallery", "Capture Photo from Camera")
         pictureDialog.setItems(pictureDialogItem) { _, selection ->
             when (selection) {
-                0 -> permissionForCaptureImage.galleryCheckPermission(this@DashBoardActivity, permissionListeners)
-                1 -> permissionForCaptureImage.cameraCheckPermission(this@DashBoardActivity, permissionListeners)
+                0 -> permissionForCaptureImage.galleryCheckPermission(
+                    this@DashBoardActivity, permissionListeners
+                )
+                1 -> permissionForCaptureImage.cameraCheckPermission(
+                    this@DashBoardActivity, permissionListeners
+                )
             }
         }
         pictureDialog.show()
@@ -177,7 +183,7 @@ class DashBoardActivity : AppCompatActivity() {
     private val permissionListeners: PermissionsListener = object : PermissionsListener {
 
         override fun checkPermissionForGallery(status: Boolean, context: Context) {
-            if(status) {
+            if (status) {
                 selectImageFromGallery()
                 Log.d(TAG, "checkPermissionForGallery: Success $status")
             } else {
@@ -192,59 +198,11 @@ class DashBoardActivity : AppCompatActivity() {
         }
 
         override fun checkPermissionForCamera(status: Boolean, context: Context) {
-            if(status) {
+            if (status) {
                 selectImageFromCamera()
                 Log.d(TAG, "checkPermissionForCamera: Success $status")
             } else {
                 Log.d(TAG, "checkPermissionForCamera: Failure $status")
-                Toast.makeText(
-                    applicationContext, "You have denied the storage to select Image",
-                    Toast.LENGTH_SHORT
-                ).show()
-
-                showRotationalDialogForPermission(context)
-            }
-        }
-
-    }
-
-    private fun selectingVideoToUpload() {
-        val pictureDialog = androidx.appcompat.app.AlertDialog.Builder(this)
-        pictureDialog.setTitle("Select Action")
-        val pictureDialogItem =
-            arrayOf("Upload Video from Gallery", "Record Video from Camera")
-        pictureDialog.setItems(pictureDialogItem) { _, selection ->
-            when (selection) {
-                0 -> permissionForCaptureImage.galleryCheckPermission(this@DashBoardActivity, permissionForUploadingContentListener)
-                1 -> permissionForCaptureImage.cameraCheckPermission(this@DashBoardActivity, permissionForUploadingContentListener)
-            }
-        }
-        pictureDialog.show()
-    }
-
-    private val permissionForUploadingContentListener: PermissionsListener = object : PermissionsListener {
-
-        override fun checkPermissionForGallery(status: Boolean, context: Context) {
-            if(status) {
-                selectVideoContentToUpload()
-                Log.d(TAG, "checkPermissionForGallery: Success $status")
-            } else {
-                Log.d(TAG, "checkPermissionForGallery: Failure $status")
-                Toast.makeText(
-                    applicationContext, "You have denied the storage to select Image",
-                    Toast.LENGTH_SHORT
-                ).show()
-
-                showRotationalDialogForPermission(context)
-            }
-        }
-
-        override fun checkPermissionForCamera(status: Boolean, context: Context) {
-            if(status) {
-                openCameraToCaptureVideo()
-                Log.d(TAG, "checkPermissionForGallery: Success $status")
-            } else {
-                Log.d(TAG, "checkPermissionForGallery: Failure $status")
                 Toast.makeText(
                     applicationContext, "You have denied the storage to select Image",
                     Toast.LENGTH_SHORT
@@ -287,21 +245,6 @@ class DashBoardActivity : AppCompatActivity() {
         startActivityForResult(intent, CAMERA_REQUEST_CODE)
     }
 
-    private fun selectVideoContentToUpload() {
-        val intent = Intent()
-        intent.type = "video/*"
-        intent.action = Intent.ACTION_PICK
-        startActivityForResult(Intent.createChooser(intent, "Select Video"),VIDEO_REQUEST_CODE)
-    }
-
-    private fun openCameraToCaptureVideo() {
-        if (packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY)) { // First check if camera is available in the device
-            val intent = Intent(MediaStore.ACTION_VIDEO_CAPTURE)
-            startActivityForResult(intent, VIDEO_CAMERA_REQUEST_CODE);
-        }
-    }
-
-
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
@@ -315,39 +258,6 @@ class DashBoardActivity : AppCompatActivity() {
                     gettingDataAsBitmap(data)
                 }
 
-                VIDEO_REQUEST_CODE -> {
-                    if (data?.data != null) {
-                        val uriPathHelper = URIPathHelper()
-                        val videoFullPath = uriPathHelper.getPath(this@DashBoardActivity, data?.data!!)
-
-                        supportFragmentManager.beginTransaction().setReorderingAllowed(true)
-                            .addToBackStack(null).replace(R.id.dashBoard_fragment_container, UploadingContentVideoFragment()).commit()
-
-                        val bundle = Bundle()
-                        bundle.putString("videoFullPath", videoFullPath)
-                        // set FragmentClass Arguments
-                        val fragmentObj = UploadingContentVideoFragment()
-                        fragmentObj.arguments = bundle
-
-                    }
-                }
-
-                VIDEO_CAMERA_REQUEST_CODE -> {
-                    if (data?.data != null) {
-                        val uriPathHelper = URIPathHelper()
-                        val videoFullPath = uriPathHelper.getPath(this@DashBoardActivity, data?.data!!)
-
-                        supportFragmentManager.beginTransaction().setReorderingAllowed(true)
-                            .addToBackStack(null).replace(R.id.dashBoard_fragment_container, UploadingContentVideoFragment()).commit()
-
-                        val bundle = Bundle()
-                        bundle.putString("videoFullPath", videoFullPath)
-                        // set FragmentClass Arguments
-                        val fragmentObj = UploadingContentVideoFragment()
-                        fragmentObj.arguments = bundle
-
-                    }
-                }
             }
         }
     }
@@ -360,15 +270,21 @@ class DashBoardActivity : AppCompatActivity() {
         }
     }
 
-    private val uploadingImageListener: ImageUploadingFirebaseListener = object : ImageUploadingFirebaseListener {
-        override fun onProfileImageUploadingToFirebase(status: Boolean) {
-            if(status) {
-                Toast.makeText(this@DashBoardActivity, "Uploading and Setting Profile Succeeded $status",
-                    Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(this@DashBoardActivity, "Failed Uploading and Setting Profile $status",
-                    Toast.LENGTH_SHORT).show()
+    private val uploadingImageListener: ImageUploadingFirebaseListener =
+        object : ImageUploadingFirebaseListener {
+            override fun onProfileImageUploadingToFirebase(status: Boolean) {
+                if (status) {
+                    Toast.makeText(
+                        this@DashBoardActivity, "Uploading and Setting Profile Succeeded $status",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                } else {
+                    Toast.makeText(
+                        this@DashBoardActivity, "Failed Uploading and Setting Profile $status",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
             }
         }
-    }
+
 }

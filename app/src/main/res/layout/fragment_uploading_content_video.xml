@@ -35,7 +35,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_marginTop="20dp"
-                android:layout_marginBottom="30dp"
                 android:background="@drawable/dashboard_toolbar_background"
                 android:elevation="1dp"
                 android:orientation="vertical">
@@ -89,15 +88,23 @@
                     android:hint="Date Time"
                     android:maxLines="1"
                     android:textColor="@color/design_default_color_error"
-                    android:textSize="25dp"
+                    android:textSize="20dp"
                     android:textStyle="bold"
                     android:layout_marginTop="30dp"
-                    android:layout_marginBottom="20dp"/>
+                    android:layout_marginBottom="0dp"/>
 
             </LinearLayout>
 
         </LinearLayout>
 
     </ScrollView>
+
+    <ProgressBar
+        android:id="@+id/content_progressBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="invisible"
+        app:layout_anchor="@+id/upload_content_scrollView"
+        app:layout_anchorGravity="bottom|center" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
