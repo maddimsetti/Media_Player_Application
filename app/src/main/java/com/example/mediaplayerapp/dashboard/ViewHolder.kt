@@ -25,10 +25,12 @@ import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory
 import kotlinx.android.synthetic.main.recycler_view_items.view.*
 
 
-class ViewHolder(private val view: View): RecyclerView.ViewHolder(view) {
+class ViewHolder(
+    private val view: View): RecyclerView.ViewHolder(view) {
 
     private val simpleExoPlayerView: PlayerView = view.recycler_content_videoView
     private lateinit var simpleExoPlayer: SimpleExoPlayer
+
 
     fun setExoplayer(application: Application, videoDetails: MediaPlayer) {
         val mediaPlayerThumbnail: TextView = view.recycler_content_title
@@ -60,6 +62,7 @@ class ViewHolder(private val view: View): RecyclerView.ViewHolder(view) {
             Log.e("ViewHolder", "setExoplayer: error $e")
         }
     }
+
 }
 
 

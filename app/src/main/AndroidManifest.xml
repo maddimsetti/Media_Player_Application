@@ -14,7 +14,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.MediaPlayerApp">
-        <activity android:name=".dashboard.FullScreenActivity"></activity>
+        <activity
+            android:name=".dashboard.FullScreenActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize" />
         <activity android:name=".dashboard.DashBoardActivity" />
         <activity android:name=".registration.MainActivity" />
         <activity android:name=".SplashActivity">

@@ -1,9 +1,76 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     tools:context=".dashboard.FullScreenActivity">
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <include layout="@layout/fullscreen_toolbar" />
+
+    <com.google.android.exoplayer2.ui.PlayerView
+        android:id="@+id/fullScreen_exoplayer"
+        android:layout_width="match_parent"
+        android:layout_height="230dp"
+        android:layout_marginTop="10dp"
+        app:controller_layout_id="@layout/exoplayer_controller_custom_layout"
+        app:resize_mode="fill" />
+
+
+    <TextView
+        android:id="@+id/fullscreen_exo_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="70dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginBottom="10dp"
+        android:backgroundTint="#F60471"
+        android:hint="@string/title"
+        android:maxLines="2"
+        android:textAlignment="textStart"
+        android:textAppearance="@style/TextAppearance.AppCompat.Widget.ActionBar.Title"
+        android:textColor="@color/black"
+        android:textColorHighlight="#050505"
+        android:textColorHint="#070707"
+        android:textColorLink="#050505"
+        android:textSize="22sp"
+        android:textStyle="italic" />
+
+    <TextView
+        android:id="@+id/fullscreen_exo_description"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="30dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginBottom="10dp"
+        android:backgroundTint="#F60471"
+        android:hint="@string/description"
+        android:maxLines="10"
+        android:textAlignment="textStart"
+        android:textAppearance="@style/TextAppearance.AppCompat.Widget.ActionBar.Title"
+        android:textColor="@color/black"
+        android:textColorHighlight="#040404"
+        android:textColorHint="#050505"
+        android:textColorLink="#040404"
+        android:textIsSelectable="true"
+        android:textSize="20sp"
+        android:textStyle="normal" />
+
+    <TextView
+        android:id="@+id/fullscreen_exo_dateTime"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:layout_marginBottom="0dp"
+        android:gravity="center"
+        android:hint="Date Time"
+        android:maxLines="1"
+        android:textColor="#C51162"
+        android:textSize="20dp"
+        android:textStyle="bold" />
+
+
+</LinearLayout>

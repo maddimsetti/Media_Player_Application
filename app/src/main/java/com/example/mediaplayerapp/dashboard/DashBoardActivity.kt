@@ -14,6 +14,7 @@ import android.util.Log
 import android.view.*
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.SearchView
 import androidx.core.view.MenuItemCompat
 import androidx.paging.PagedList
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -29,8 +30,6 @@ import com.example.mediaplayerapp.registration.RegistrationFragment.Companion.TA
 import com.example.mediaplayerapp.service.DashBoardService
 import com.example.mediaplayerapp.service.ProfilePermissionService
 import com.example.mediaplayerapp.uripath.*
-import com.firebase.ui.database.FirebaseRecyclerAdapter
-import com.firebase.ui.database.FirebaseRecyclerOptions
 import com.firebase.ui.database.paging.DatabasePagingOptions
 import com.firebase.ui.database.paging.FirebaseRecyclerPagingAdapter
 import com.firebase.ui.database.paging.LoadingState
@@ -46,6 +45,7 @@ import kotlinx.android.synthetic.main.dialog_profile_details.*
 import kotlinx.android.synthetic.main.dialog_profile_details.view.*
 import kotlinx.android.synthetic.main.fragment_uploading_content_video.*
 import kotlinx.android.synthetic.main.recycler_view_items.*
+import kotlinx.android.synthetic.main.recycler_view_items.view.*
 import kotlinx.android.synthetic.main.toolbar_profile.*
 import kotlinx.android.synthetic.main.toolbar_profile.view.*
 
@@ -126,6 +126,15 @@ class DashBoardActivity : AppCompatActivity() {
 
             override fun onBindViewHolder(holder: ViewHolder, position: Int, mediaPlayer: MediaPlayer) {
                 holder.setExoplayer(application, mediaPlayer)
+                holder.itemView.setOnClickListener() {
+                    val intent = Intent(this@DashBoardActivity, FullScreenActivity::class.java)
+                    intent.putExtra("Title", mediaPlayer.title)
+                    intent.putExtra("Content", mediaPlayer.content)
+                    intent.putExtra("DateTime", mediaPlayer.dateTime)
+                    intent.putExtra("Url", mediaPlayer.url)
+                    startActivity(intent)
+
+                }
             }
 
             override fun onLoadingStateChanged(state: LoadingState) {
@@ -164,7 +173,6 @@ class DashBoardActivity : AppCompatActivity() {
 
         swipeRefreshLayout.setOnRefreshListener(object: SwipeRefreshLayout.OnRefreshListener {
             override fun onRefresh() {
-                content_upload_new_video.stopPlayback()
                 firebaseAdapter.refresh()
             }
 
@@ -195,15 +203,32 @@ class DashBoardActivity : AppCompatActivity() {
             Toast.makeText(this@DashBoardActivity, "Profile Image Selected", Toast.LENGTH_SHORT)
                 .show()
         }
+
+
+        val menuSearchItem = menu?.findItem(R.id.toolbar_search)
+        val searchView = MenuItemCompat.getActionView(menuSearchItem) as SearchView
+        searchView.setOnQueryTextListener(object: SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean {
+                if (query != null) {
+                    firebaseSearch(query)
+                }
+                return false
+            }
+
+            override fun onQueryTextChange(newText: String?): Boolean {
+                if (newText != null) {
+                    firebaseSearch(newText)
+                }
+                return false
+            }
+
+        })
         return true
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
 
         when (item.itemId) {
-            R.id.toolbar_search -> {
-                Toast.makeText(this@DashBoardActivity, "search", Toast.LENGTH_SHORT).show()
-            }
 
             R.id.toolbar_upload_videos -> {
                 supportFragmentManager.beginTransaction()
@@ -214,6 +239,84 @@ class DashBoardActivity : AppCompatActivity() {
         }
         return true
     }
+
+private fun firebaseSearch(searchText: String) {
+    val query = searchText.toLowerCase()
+    val firebaseQuery: Query = databaseReference.orderByChild("title").startAt(query).endAt(query +"\uf8ff")
+
+    val configuration = PagedList.Config.Builder()
+        .setEnablePlaceholders(false)
+        .setPrefetchDistance(5)
+        .setPageSize(10)
+        .build()
+
+    //Initialize FirebasePagingOptions
+    val firebaseOptions: DatabasePagingOptions<MediaPlayer> = DatabasePagingOptions.Builder<MediaPlayer>()
+        .setLifecycleOwner(this@DashBoardActivity)
+        .setQuery(firebaseQuery, configuration, MediaPlayer::class.java).build()
+
+    //Initialize Adapter
+    val firebaseAdapter: FirebaseRecyclerPagingAdapter<MediaPlayer, ViewHolder> = object:
+        FirebaseRecyclerPagingAdapter<MediaPlayer, ViewHolder>(firebaseOptions) {
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+            val view: View = LayoutInflater.from(parent.context).inflate(R.layout.recycler_view_items, parent, false)
+            return ViewHolder(view)
+        }
+
+        override fun onBindViewHolder(holder: ViewHolder, position: Int, mediaPlayer: MediaPlayer) {
+            holder.setExoplayer(application, mediaPlayer)
+            holder.itemView.setOnClickListener() {
+                val intent = Intent(this@DashBoardActivity, FullScreenActivity::class.java)
+                intent.putExtra("Title", mediaPlayer.title)
+                intent.putExtra("Content", mediaPlayer.content)
+                intent.putExtra("DateTime", mediaPlayer.dateTime)
+                intent.putExtra("Url", mediaPlayer.url)
+                startActivity(intent)
+
+            }
+        }
+
+        override fun onLoadingStateChanged(state: LoadingState) {
+            when(state) {
+                LoadingState.LOADING_INITIAL -> {}
+
+                LoadingState.LOADED -> {
+                    swipeRefreshLayout.isRefreshing = false
+                }
+
+                LoadingState.FINISHED -> {
+                    swipeRefreshLayout.isRefreshing = false
+                }
+
+                LoadingState.LOADING_MORE -> {
+                    swipeRefreshLayout.isRefreshing = true
+                }
+
+                LoadingState.ERROR -> {
+                    retry()
+                }
+            }
+        }
+
+        override fun onError(databaseError: DatabaseError) {
+            super.onError(databaseError)
+            swipeRefreshLayout.isRefreshing = false
+            databaseError.toException().printStackTrace()
+        }
+
+    }
+    firebaseAdapter.notifyDataSetChanged()
+    firebaseAdapter.startListening()
+    recyclerView.adapter = firebaseAdapter
+
+    swipeRefreshLayout.setOnRefreshListener(object: SwipeRefreshLayout.OnRefreshListener {
+        override fun onRefresh() {
+            firebaseAdapter.refresh()
+        }
+
+    })
+
+}
 
     private fun viewUserProfileDetails() {
         val builder = AlertDialog.Builder(this@DashBoardActivity)
@@ -372,5 +475,6 @@ class DashBoardActivity : AppCompatActivity() {
                 }
             }
         }
+
 
 }
