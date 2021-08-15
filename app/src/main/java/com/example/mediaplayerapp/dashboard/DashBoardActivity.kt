@@ -15,8 +15,10 @@ import android.view.*
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.MenuItemCompat
+import androidx.paging.PagedList
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.example.mediaplayerapp.R
 import com.example.mediaplayerapp.listeners.DashBoardListener
 import com.example.mediaplayerapp.listeners.ImageUploadingFirebaseListener
@@ -29,6 +31,9 @@ import com.example.mediaplayerapp.service.ProfilePermissionService
 import com.example.mediaplayerapp.uripath.*
 import com.firebase.ui.database.FirebaseRecyclerAdapter
 import com.firebase.ui.database.FirebaseRecyclerOptions
+import com.firebase.ui.database.paging.DatabasePagingOptions
+import com.firebase.ui.database.paging.FirebaseRecyclerPagingAdapter
+import com.firebase.ui.database.paging.LoadingState
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.database.*
@@ -39,6 +44,7 @@ import kotlinx.android.synthetic.main.custom_toolbar.*
 import kotlinx.android.synthetic.main.dialog_forgot_password.view.*
 import kotlinx.android.synthetic.main.dialog_profile_details.*
 import kotlinx.android.synthetic.main.dialog_profile_details.view.*
+import kotlinx.android.synthetic.main.fragment_uploading_content_video.*
 import kotlinx.android.synthetic.main.recycler_view_items.*
 import kotlinx.android.synthetic.main.toolbar_profile.*
 import kotlinx.android.synthetic.main.toolbar_profile.view.*
@@ -62,6 +68,8 @@ class DashBoardActivity : AppCompatActivity() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var mediaPlayer: MediaPlayer
 
+    private lateinit var swipeRefreshLayout: SwipeRefreshLayout
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_dash_board)
@@ -84,20 +92,33 @@ class DashBoardActivity : AppCompatActivity() {
         databaseReference = database.getReference("MediaPlayer List")
         mediaPlayer = MediaPlayer()
 
+        swipeRefreshLayout = swipe_refresh_layout_page
+
         recyclerView = dashBoard_recycler_view
         recyclerView.setHasFixedSize(true)
         recyclerView.layoutManager = LinearLayoutManager(this@DashBoardActivity)
+
     }
 
     override fun onStart() {
         super.onStart()
         updateUI(currentUser)
 
-        val firebaseOptions: FirebaseRecyclerOptions<MediaPlayer> = FirebaseRecyclerOptions.Builder<MediaPlayer>()
-            .setQuery(databaseReference, MediaPlayer::class.java).build()
+        //Initialize PagedList Configuration
+        val configuration = PagedList.Config.Builder()
+            .setEnablePlaceholders(false)
+            .setPrefetchDistance(5)
+            .setPageSize(10)
+            .build()
 
-        val firebaseRecyclerAdapter: FirebaseRecyclerAdapter<MediaPlayer, ViewHolder> = object:
-            FirebaseRecyclerAdapter<MediaPlayer, ViewHolder>(firebaseOptions) {
+        //Initialize FirebasePagingOptions
+        val firebaseOptions: DatabasePagingOptions<MediaPlayer> = DatabasePagingOptions.Builder<MediaPlayer>()
+            .setLifecycleOwner(this@DashBoardActivity)
+            .setQuery(databaseReference, configuration, MediaPlayer::class.java).build()
+
+        //Initialize Adapter
+        val firebaseAdapter: FirebaseRecyclerPagingAdapter<MediaPlayer, ViewHolder> = object:
+            FirebaseRecyclerPagingAdapter<MediaPlayer, ViewHolder>(firebaseOptions) {
             override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
                 val view: View = LayoutInflater.from(parent.context).inflate(R.layout.recycler_view_items, parent, false)
                 return ViewHolder(view)
@@ -107,10 +128,47 @@ class DashBoardActivity : AppCompatActivity() {
                 holder.setExoplayer(application, mediaPlayer)
             }
 
+            override fun onLoadingStateChanged(state: LoadingState) {
+                when(state) {
+                    LoadingState.LOADING_INITIAL -> {}
+
+                    LoadingState.LOADED -> {
+
+                        swipeRefreshLayout.isRefreshing = false
+                    }
+
+                    LoadingState.FINISHED -> {
+                        swipeRefreshLayout.isRefreshing = false
+                    }
+
+                    LoadingState.LOADING_MORE -> {
+                        swipeRefreshLayout.isRefreshing = true
+                    }
+
+                    LoadingState.ERROR -> {
+                        retry()
+                    }
+                }
+            }
+
+            override fun onError(databaseError: DatabaseError) {
+                super.onError(databaseError)
+                swipeRefreshLayout.isRefreshing = false
+                databaseError.toException().printStackTrace()
+            }
+
         }
-        firebaseRecyclerAdapter.notifyDataSetChanged()
-        firebaseRecyclerAdapter.startListening()
-        recyclerView.adapter = firebaseRecyclerAdapter
+        firebaseAdapter.notifyDataSetChanged()
+        firebaseAdapter.startListening()
+        recyclerView.adapter = firebaseAdapter
+
+        swipeRefreshLayout.setOnRefreshListener(object: SwipeRefreshLayout.OnRefreshListener {
+            override fun onRefresh() {
+                content_upload_new_video.stopPlayback()
+                firebaseAdapter.refresh()
+            }
+
+        })
     }
 
     private fun updateUI(currentUser: FirebaseUser?) {

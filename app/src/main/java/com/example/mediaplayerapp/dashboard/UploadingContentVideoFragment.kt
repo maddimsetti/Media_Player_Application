@@ -31,6 +31,7 @@ import com.google.android.gms.tasks.OnCompleteListener
 import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.UploadTask
@@ -47,6 +48,7 @@ class UploadingContentVideoFragment: Fragment(), View.OnClickListener {
     private var videoUri: Uri? = null
 
     private lateinit var databaseReference: DatabaseReference
+    private lateinit var fireStore: FirebaseFirestore
     private lateinit var mediaPlayer: MediaPlayer
 
     private val VIDEO_REQUEST_CODE = 1431
@@ -64,6 +66,7 @@ class UploadingContentVideoFragment: Fragment(), View.OnClickListener {
         val view = inflater.inflate(R.layout.fragment_uploading_content_video, container, false)
         mediaPlayer = MediaPlayer()
         databaseReference = FirebaseDatabase.getInstance().getReference("MediaPlayer List")
+        fireStore = FirebaseFirestore.getInstance()
         permissionForCaptureImage = Permissions() //permissions class
         view.content_create_add.setOnClickListener(this)
         view.content_create_save.setOnClickListener(this)
@@ -261,6 +264,8 @@ class UploadingContentVideoFragment: Fragment(), View.OnClickListener {
                             if (id != null) {
                                 databaseReference.child(id).setValue(mediaPlayer)
                             }
+
+                            fireStore.collection("MediaPlayer List").add(mediaPlayer)
 
                         } else {
                             Toast.makeText(context, "Data Saving Fail", Toast.LENGTH_SHORT).show()
