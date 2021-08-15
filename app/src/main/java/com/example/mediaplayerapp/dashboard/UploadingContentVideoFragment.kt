@@ -32,6 +32,7 @@ import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.UploadTask
 import kotlinx.android.synthetic.main.fragment_uploading_content_video.*
 import kotlinx.android.synthetic.main.upload_content_toolbar.*
@@ -39,13 +40,14 @@ import kotlinx.android.synthetic.main.upload_content_toolbar.view.*
 import java.text.SimpleDateFormat
 import java.util.*
 
-
 class UploadingContentVideoFragment: Fragment(), View.OnClickListener {
 
     private lateinit var permissionForCaptureImage: Permissions
     private var currentDate: String? = null
     private var videoUri: Uri? = null
 
+    private lateinit var databaseReference: DatabaseReference
+    private lateinit var mediaPlayer: MediaPlayer
 
     private val VIDEO_REQUEST_CODE = 1431
     private val VIDEO_CAMERA_REQUEST_CODE = 1234
@@ -60,6 +62,8 @@ class UploadingContentVideoFragment: Fragment(), View.OnClickListener {
     ): View? {
         // Inflate the layout for this fragment
         val view = inflater.inflate(R.layout.fragment_uploading_content_video, container, false)
+        mediaPlayer = MediaPlayer()
+        databaseReference = FirebaseDatabase.getInstance().getReference("MediaPlayer List")
         permissionForCaptureImage = Permissions() //permissions class
         view.content_create_add.setOnClickListener(this)
         view.content_create_save.setOnClickListener(this)
@@ -74,20 +78,28 @@ class UploadingContentVideoFragment: Fragment(), View.OnClickListener {
         content_upload_dateTime.text = currentDate
 
         content_upload_backButton.setOnClickListener(View.OnClickListener {
-            activity?.onBackPressed()
+            val intent: Intent = Intent(activity, DashBoardActivity::class.java)
+            activity?.startActivity(intent)
         })
+    }
 
+    override fun onStart() {
+        super.onStart()
     }
 
     override fun onClick(view: View?) {
         when(view?.id) {
             R.id.content_create_add -> {
+                content_upload_title.text = null
+                content_upload_description.text = null
+                content_upload_dateTime.text = currentDate
+
                 selectingVideoToUpload()
-                Toast.makeText(activity, "create new add video", Toast.LENGTH_SHORT).show()
+                Toast.makeText(activity, "Click on create new video Button", Toast.LENGTH_SHORT).show()
             }
             R.id.content_create_save -> {
                 uploadVideoToFirebase()
-                Toast.makeText(activity, "save the video", Toast.LENGTH_SHORT).show()
+                Toast.makeText(activity, "Click on Save the video Button", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -100,16 +112,10 @@ class UploadingContentVideoFragment: Fragment(), View.OnClickListener {
         pictureDialog?.setItems(pictureDialogItem) { _, selection ->
             when (selection) {
                 0 -> context?.let {
-                    permissionForCaptureImage.galleryCheckPermission(
-                        it,
-                        permissionForUploadingContentListener
-                    )
+                    permissionForCaptureImage.galleryCheckPermission(it, permissionForUploadingContentListener)
                 }
                 1 -> context?.let {
-                    permissionForCaptureImage.cameraCheckPermission(
-                        it,
-                        permissionForUploadingContentListener
-                    )
+                    permissionForCaptureImage.cameraCheckPermission(it, permissionForUploadingContentListener)
                 }
             }
         }
@@ -126,9 +132,8 @@ class UploadingContentVideoFragment: Fragment(), View.OnClickListener {
                 } else {
                     Log.d(RegistrationFragment.TAG, "checkPermissionForGallery: Failure $status")
                     Toast.makeText(
-                        context, "You have denied the storage to select Image",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                        context, "You have denied the storage to select Video",
+                        Toast.LENGTH_SHORT).show()
 
                     showRotationalDialogForPermission(context)
                 }
@@ -137,11 +142,11 @@ class UploadingContentVideoFragment: Fragment(), View.OnClickListener {
             override fun checkPermissionForCamera(status: Boolean, context: Context) {
                 if (status) {
                     openCameraToCaptureVideo()
-                    Log.d(RegistrationFragment.TAG, "checkPermissionForGallery: Success $status")
+                    Log.d(RegistrationFragment.TAG, "checkPermissionForCamera: Success $status")
                 } else {
-                    Log.d(RegistrationFragment.TAG, "checkPermissionForGallery: Failure $status")
+                    Log.d(RegistrationFragment.TAG, "checkPermissionForCamera: Failure $status")
                     Toast.makeText(
-                        context, "You have denied the storage to select Image",
+                        context, "You have denied the storage to select Video",
                         Toast.LENGTH_SHORT
                     ).show()
 
@@ -185,7 +190,7 @@ class UploadingContentVideoFragment: Fragment(), View.OnClickListener {
         }
     }
 
-    fun getExtension(uri: Uri): String? {
+    private fun getExtension(uri: Uri): String? {
         val contentResolver: ContentResolver? = context?.contentResolver
         val mimeTypeMap: MimeTypeMap = MimeTypeMap.getSingleton()
         return mimeTypeMap.getExtensionFromMimeType(contentResolver?.getType(uri))
@@ -218,13 +223,13 @@ class UploadingContentVideoFragment: Fragment(), View.OnClickListener {
         val mediaController = MediaController(context)
         content_upload_new_video.setMediaController(mediaController)
         mediaController.setAnchorView(content_upload_new_video)
+
     }
 
     private fun uploadVideoToFirebase() {
         val title = content_upload_title.text.toString()
         val content = content_upload_description.text.toString()
         val dateTime = content_upload_dateTime.text.toString()
-        var maxId: Long = 0
 
         if(videoUri != null || !TextUtils.isEmpty(title)
             || !TextUtils.isEmpty(content)) {
@@ -251,22 +256,10 @@ class UploadingContentVideoFragment: Fragment(), View.OnClickListener {
                             content_progressBar.visibility = View.GONE
                             Toast.makeText(context, "Data Saved To Storage", Toast.LENGTH_SHORT).show()
 
-                            val mediaPlayerList = MediaPlayer(downloadUrl.toString(), title, content, dateTime)
-                            val userId = FirebaseAuth.getInstance().currentUser?.uid
-                            val reference = FirebaseDatabase.getInstance().getReference("MediaPlayer")
-                            reference.addValueEventListener(object: ValueEventListener {
-                                override fun onDataChange(snapshot: DataSnapshot) {
-                                    if(snapshot.exists()) {
-                                        maxId = snapshot.childrenCount
-                                    }
-                                }
-                                override fun onCancelled(error: DatabaseError) {
-                                    TODO("Not yet implemented")
-                                }
-
-                            })
-                            if (userId != null) {
-                                reference.child(userId).child((maxId + 1).toString()).setValue(mediaPlayerList)
+                            mediaPlayer = MediaPlayer(downloadUrl.toString(), title, content, dateTime)
+                            var id = databaseReference.push().key
+                            if (id != null) {
+                                databaseReference.child(id).setValue(mediaPlayer)
                             }
 
                         } else {

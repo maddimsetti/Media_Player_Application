@@ -5,7 +5,6 @@ import android.app.AlertDialog
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
@@ -16,15 +15,20 @@ import android.view.*
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.MenuItemCompat
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.mediaplayerapp.R
 import com.example.mediaplayerapp.listeners.DashBoardListener
 import com.example.mediaplayerapp.listeners.ImageUploadingFirebaseListener
 import com.example.mediaplayerapp.listeners.PermissionsListener
+import com.example.mediaplayerapp.mediaplayer.MediaPlayer
 import com.example.mediaplayerapp.permission.Permissions
 import com.example.mediaplayerapp.registration.RegistrationFragment.Companion.TAG
 import com.example.mediaplayerapp.service.DashBoardService
 import com.example.mediaplayerapp.service.ProfilePermissionService
 import com.example.mediaplayerapp.uripath.*
+import com.firebase.ui.database.FirebaseRecyclerAdapter
+import com.firebase.ui.database.FirebaseRecyclerOptions
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.database.*
@@ -35,9 +39,9 @@ import kotlinx.android.synthetic.main.custom_toolbar.*
 import kotlinx.android.synthetic.main.dialog_forgot_password.view.*
 import kotlinx.android.synthetic.main.dialog_profile_details.*
 import kotlinx.android.synthetic.main.dialog_profile_details.view.*
+import kotlinx.android.synthetic.main.recycler_view_items.*
 import kotlinx.android.synthetic.main.toolbar_profile.*
 import kotlinx.android.synthetic.main.toolbar_profile.view.*
-
 
 class DashBoardActivity : AppCompatActivity() {
     private lateinit var dashBoardService: DashBoardService
@@ -52,6 +56,11 @@ class DashBoardActivity : AppCompatActivity() {
 
     private lateinit var mAuthentication: FirebaseAuth //Firebase Authentication
     private lateinit var currentUser: FirebaseUser //currentUser Initializing
+
+    private lateinit var database: FirebaseDatabase
+    private lateinit var databaseReference: DatabaseReference
+    private lateinit var recyclerView: RecyclerView
+    private lateinit var mediaPlayer: MediaPlayer
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -71,11 +80,37 @@ class DashBoardActivity : AppCompatActivity() {
         view = layoutInflater.inflate(R.layout.dialog_profile_details, null)
         profileImage = view.profile_details_image as CircleImageView
 
+        database = FirebaseDatabase.getInstance()
+        databaseReference = database.getReference("MediaPlayer List")
+        mediaPlayer = MediaPlayer()
+
+        recyclerView = dashBoard_recycler_view
+        recyclerView.setHasFixedSize(true)
+        recyclerView.layoutManager = LinearLayoutManager(this@DashBoardActivity)
     }
 
     override fun onStart() {
         super.onStart()
         updateUI(currentUser)
+
+        val firebaseOptions: FirebaseRecyclerOptions<MediaPlayer> = FirebaseRecyclerOptions.Builder<MediaPlayer>()
+            .setQuery(databaseReference, MediaPlayer::class.java).build()
+
+        val firebaseRecyclerAdapter: FirebaseRecyclerAdapter<MediaPlayer, ViewHolder> = object:
+            FirebaseRecyclerAdapter<MediaPlayer, ViewHolder>(firebaseOptions) {
+            override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+                val view: View = LayoutInflater.from(parent.context).inflate(R.layout.recycler_view_items, parent, false)
+                return ViewHolder(view)
+            }
+
+            override fun onBindViewHolder(holder: ViewHolder, position: Int, mediaPlayer: MediaPlayer) {
+                holder.setExoplayer(application, mediaPlayer)
+            }
+
+        }
+        firebaseRecyclerAdapter.notifyDataSetChanged()
+        firebaseRecyclerAdapter.startListening()
+        recyclerView.adapter = firebaseRecyclerAdapter
     }
 
     private fun updateUI(currentUser: FirebaseUser?) {
@@ -153,11 +188,8 @@ class DashBoardActivity : AppCompatActivity() {
                 view.profile_details_phone.text = phoneNumber
 
             } else {
-                Toast.makeText(
-                    this@DashBoardActivity,
-                    "Fetching the Data From Firebase Failed",
-                    Toast.LENGTH_SHORT
-                ).show()
+                Toast.makeText(this@DashBoardActivity, "Fetching the Data From Firebase Failed",
+                    Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -169,12 +201,8 @@ class DashBoardActivity : AppCompatActivity() {
             arrayOf("Select photo from Gallery", "Capture Photo from Camera")
         pictureDialog.setItems(pictureDialogItem) { _, selection ->
             when (selection) {
-                0 -> permissionForCaptureImage.galleryCheckPermission(
-                    this@DashBoardActivity, permissionListeners
-                )
-                1 -> permissionForCaptureImage.cameraCheckPermission(
-                    this@DashBoardActivity, permissionListeners
-                )
+                0 -> permissionForCaptureImage.galleryCheckPermission(this@DashBoardActivity, permissionListeners)
+                1 -> permissionForCaptureImage.cameraCheckPermission(this@DashBoardActivity, permissionListeners)
             }
         }
         pictureDialog.show()

@@ -26,6 +26,7 @@
     <string name="description">Description</string>
     <string name="createnewvideo">CreateNewVideo</string>
     <string name="savecontentvideo">SaveContentVideo</string>
+    <string name="date_time">Date Time</string>
 
 
 </resources>

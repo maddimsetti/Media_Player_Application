@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="385dp"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:elevation="20dp"
+    app:cardBackgroundColor="@color/white"
+    app:cardCornerRadius="15dp"
+    android:padding="10dp"
+    android:layout_margin="5dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <com.google.android.exoplayer2.ui.PlayerView
+            android:id="@+id/recycler_content_videoView"
+            android:layout_width="match_parent"
+            android:layout_height="250dp"
+            android:layout_marginTop="5dp"
+            app:use_controller="true"
+            app:resize_mode="fill" />
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="10dp">
+
+            <TextView
+                android:id="@+id/recycler_content_title"
+                android:layout_width="345dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="20dp"
+                android:layout_marginEnd="5dp"
+                android:layout_marginBottom="0dp"
+                android:backgroundTint="#F60471"
+                android:hint="@string/title"
+                android:maxLines="2"
+                android:textAlignment="textStart"
+                android:textAppearance="@style/TextAppearance.AppCompat.Widget.ActionBar.Title"
+                android:textColor="#050505"
+                android:textColorHighlight="#070707"
+                android:textColorHint="#070707"
+                android:textColorLink="#050505"
+                android:textSize="20sp"
+                android:textStyle="italic" />
+
+            <ImageButton
+                android:id="@+id/recycler_content_delete"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_recycler_delete" />
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/recycler_content_dateTime"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="20dp"
+            android:layout_marginBottom="0dp"
+            android:gravity="end"
+            android:hint="@string/date_time"
+            android:maxLines="1"
+            android:textColor="#F30771"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/recycler_content_description"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="10dp"
+            android:layout_marginBottom="0dp"
+            android:backgroundTint="#F60471"
+            android:hint="@string/description"
+            android:maxLines="10"
+            android:textAlignment="textStart"
+            android:textAppearance="@style/TextAppearance.AppCompat.Widget.ActionBar.Title"
+            android:textColor="@color/black"
+            android:textColorHighlight="#040404"
+            android:textColorHint="#050505"
+            android:textColorLink="#040404"
+            android:textIsSelectable="true"
+            android:textSize="14sp"
+            android:textStyle="normal"
+            android:visibility="invisible" />
+
+    </LinearLayout>
+
+</androidx.cardview.widget.CardView>
