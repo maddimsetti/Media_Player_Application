@@ -26,6 +26,7 @@ import com.example.mediaplayerapp.listeners.ImageUploadingFirebaseListener
 import com.example.mediaplayerapp.listeners.PermissionsListener
 import com.example.mediaplayerapp.mediaplayer.MediaPlayer
 import com.example.mediaplayerapp.permission.Permissions
+import com.example.mediaplayerapp.registration.MainActivity
 import com.example.mediaplayerapp.registration.RegistrationFragment.Companion.TAG
 import com.example.mediaplayerapp.service.DashBoardService
 import com.example.mediaplayerapp.service.ProfilePermissionService
@@ -40,6 +41,7 @@ import com.squareup.picasso.Picasso
 import de.hdodenhof.circleimageview.CircleImageView
 import kotlinx.android.synthetic.main.activity_dash_board.*
 import kotlinx.android.synthetic.main.custom_toolbar.*
+import kotlinx.android.synthetic.main.dialog_box_logout.view.*
 import kotlinx.android.synthetic.main.dialog_forgot_password.view.*
 import kotlinx.android.synthetic.main.dialog_profile_details.*
 import kotlinx.android.synthetic.main.dialog_profile_details.view.*
@@ -73,16 +75,21 @@ class DashBoardActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_dash_board)
+
         bottomNavigationView.background = null
+        bottomNavigationView.selectedItemId = R.id.navigation_home
+        onNavigationItemSelected()
+
         setSupportActionBar(custom_toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(false)
         custom_toolbar.showOverflowMenu()
 
         mAuthentication = FirebaseAuth.getInstance()
-        currentUser = mAuthentication.currentUser!!
+//        currentUser = mAuthentication.currentUser!!
 
         dashBoardService = DashBoardService() //Initialize the DashBoard Service
-        profilePermissionService = ProfilePermissionService() //Initialize the ProfilePermissionService
+        profilePermissionService =
+            ProfilePermissionService() //Initialize the ProfilePermissionService
 
         permissionForCaptureImage = Permissions() //permissions class
         view = layoutInflater.inflate(R.layout.dialog_profile_details, null)
@@ -102,7 +109,7 @@ class DashBoardActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
-        updateUI(currentUser)
+//        updateUI(currentUser)
 
         //Initialize PagedList Configuration
         val configuration = PagedList.Config.Builder()
@@ -112,19 +119,25 @@ class DashBoardActivity : AppCompatActivity() {
             .build()
 
         //Initialize FirebasePagingOptions
-        val firebaseOptions: DatabasePagingOptions<MediaPlayer> = DatabasePagingOptions.Builder<MediaPlayer>()
-            .setLifecycleOwner(this@DashBoardActivity)
-            .setQuery(databaseReference, configuration, MediaPlayer::class.java).build()
+        val firebaseOptions: DatabasePagingOptions<MediaPlayer> =
+            DatabasePagingOptions.Builder<MediaPlayer>()
+                .setLifecycleOwner(this@DashBoardActivity)
+                .setQuery(databaseReference, configuration, MediaPlayer::class.java).build()
 
         //Initialize Adapter
-        val firebaseAdapter: FirebaseRecyclerPagingAdapter<MediaPlayer, ViewHolder> = object:
+        val firebaseAdapter: FirebaseRecyclerPagingAdapter<MediaPlayer, ViewHolder> = object :
             FirebaseRecyclerPagingAdapter<MediaPlayer, ViewHolder>(firebaseOptions) {
             override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-                val view: View = LayoutInflater.from(parent.context).inflate(R.layout.recycler_view_items, parent, false)
+                val view: View = LayoutInflater.from(parent.context)
+                    .inflate(R.layout.recycler_view_items, parent, false)
                 return ViewHolder(view)
             }
 
-            override fun onBindViewHolder(holder: ViewHolder, position: Int, mediaPlayer: MediaPlayer) {
+            override fun onBindViewHolder(
+                holder: ViewHolder,
+                position: Int,
+                mediaPlayer: MediaPlayer
+            ) {
                 holder.setExoplayer(application, mediaPlayer)
                 holder.itemView.setOnClickListener() {
                     val intent = Intent(this@DashBoardActivity, FullScreenActivity::class.java)
@@ -138,8 +151,9 @@ class DashBoardActivity : AppCompatActivity() {
             }
 
             override fun onLoadingStateChanged(state: LoadingState) {
-                when(state) {
-                    LoadingState.LOADING_INITIAL -> {}
+                when (state) {
+                    LoadingState.LOADING_INITIAL -> {
+                    }
 
                     LoadingState.LOADED -> {
 
@@ -171,7 +185,7 @@ class DashBoardActivity : AppCompatActivity() {
         firebaseAdapter.startListening()
         recyclerView.adapter = firebaseAdapter
 
-        swipeRefreshLayout.setOnRefreshListener(object: SwipeRefreshLayout.OnRefreshListener {
+        swipeRefreshLayout.setOnRefreshListener(object : SwipeRefreshLayout.OnRefreshListener {
             override fun onRefresh() {
                 firebaseAdapter.refresh()
             }
@@ -179,12 +193,11 @@ class DashBoardActivity : AppCompatActivity() {
         })
     }
 
-    private fun updateUI(currentUser: FirebaseUser?) {
-        if (currentUser?.photoUrl != null) {
-            Picasso.with(this@DashBoardActivity).load(currentUser.photoUrl).into(profileImage)
-        }
-
-    }
+//    private fun updateUI(currentUser: FirebaseUser?) {
+//        if (currentUser?.photoUrl != null) {
+//            Picasso.with(this@DashBoardActivity).load(currentUser.photoUrl).into(profileImage)
+//        }
+//    }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.toolbar_action_items, menu)
@@ -193,9 +206,9 @@ class DashBoardActivity : AppCompatActivity() {
         val view: View = MenuItemCompat.getActionView(menuItem)
 
         val profile = view.toolbar_profile_image
-        if (currentUser?.photoUrl != null) {
-            Picasso.with(this@DashBoardActivity).load(currentUser.photoUrl).into(profile)
-        }
+//        if (currentUser?.photoUrl != null) {
+//            Picasso.with(this@DashBoardActivity).load(currentUser.photoUrl).into(profile)
+//        }
 
         profile.setOnClickListener {
             viewUserProfileDetails()
@@ -207,7 +220,7 @@ class DashBoardActivity : AppCompatActivity() {
 
         val menuSearchItem = menu?.findItem(R.id.toolbar_search)
         val searchView = MenuItemCompat.getActionView(menuSearchItem) as SearchView
-        searchView.setOnQueryTextListener(object: SearchView.OnQueryTextListener {
+        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
                 if (query != null) {
                     firebaseSearch(query)
@@ -240,83 +253,91 @@ class DashBoardActivity : AppCompatActivity() {
         return true
     }
 
-private fun firebaseSearch(searchText: String) {
-    val query = searchText.toLowerCase()
-    val firebaseQuery: Query = databaseReference.orderByChild("title").startAt(query).endAt(query +"\uf8ff")
+    private fun firebaseSearch(searchText: String) {
+        val query = searchText.toLowerCase()
+        val firebaseQuery: Query =
+            databaseReference.orderByChild("title").startAt(query).endAt(query + "\uf8ff")
 
-    val configuration = PagedList.Config.Builder()
-        .setEnablePlaceholders(false)
-        .setPrefetchDistance(5)
-        .setPageSize(10)
-        .build()
+        val configuration = PagedList.Config.Builder()
+            .setEnablePlaceholders(false)
+            .setPrefetchDistance(5)
+            .setPageSize(10)
+            .build()
 
-    //Initialize FirebasePagingOptions
-    val firebaseOptions: DatabasePagingOptions<MediaPlayer> = DatabasePagingOptions.Builder<MediaPlayer>()
-        .setLifecycleOwner(this@DashBoardActivity)
-        .setQuery(firebaseQuery, configuration, MediaPlayer::class.java).build()
+        //Initialize FirebasePagingOptions
+        val firebaseOptions: DatabasePagingOptions<MediaPlayer> =
+            DatabasePagingOptions.Builder<MediaPlayer>()
+                .setLifecycleOwner(this@DashBoardActivity)
+                .setQuery(firebaseQuery, configuration, MediaPlayer::class.java).build()
 
-    //Initialize Adapter
-    val firebaseAdapter: FirebaseRecyclerPagingAdapter<MediaPlayer, ViewHolder> = object:
-        FirebaseRecyclerPagingAdapter<MediaPlayer, ViewHolder>(firebaseOptions) {
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-            val view: View = LayoutInflater.from(parent.context).inflate(R.layout.recycler_view_items, parent, false)
-            return ViewHolder(view)
-        }
-
-        override fun onBindViewHolder(holder: ViewHolder, position: Int, mediaPlayer: MediaPlayer) {
-            holder.setExoplayer(application, mediaPlayer)
-            holder.itemView.setOnClickListener() {
-                val intent = Intent(this@DashBoardActivity, FullScreenActivity::class.java)
-                intent.putExtra("Title", mediaPlayer.title)
-                intent.putExtra("Content", mediaPlayer.content)
-                intent.putExtra("DateTime", mediaPlayer.dateTime)
-                intent.putExtra("Url", mediaPlayer.url)
-                startActivity(intent)
-
+        //Initialize Adapter
+        val firebaseAdapter: FirebaseRecyclerPagingAdapter<MediaPlayer, ViewHolder> = object :
+            FirebaseRecyclerPagingAdapter<MediaPlayer, ViewHolder>(firebaseOptions) {
+            override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+                val view: View = LayoutInflater.from(parent.context)
+                    .inflate(R.layout.recycler_view_items, parent, false)
+                return ViewHolder(view)
             }
-        }
 
-        override fun onLoadingStateChanged(state: LoadingState) {
-            when(state) {
-                LoadingState.LOADING_INITIAL -> {}
+            override fun onBindViewHolder(
+                holder: ViewHolder,
+                position: Int,
+                mediaPlayer: MediaPlayer
+            ) {
+                holder.setExoplayer(application, mediaPlayer)
+                holder.itemView.setOnClickListener() {
+                    val intent = Intent(this@DashBoardActivity, FullScreenActivity::class.java)
+                    intent.putExtra("Title", mediaPlayer.title)
+                    intent.putExtra("Content", mediaPlayer.content)
+                    intent.putExtra("DateTime", mediaPlayer.dateTime)
+                    intent.putExtra("Url", mediaPlayer.url)
+                    startActivity(intent)
 
-                LoadingState.LOADED -> {
-                    swipeRefreshLayout.isRefreshing = false
-                }
-
-                LoadingState.FINISHED -> {
-                    swipeRefreshLayout.isRefreshing = false
-                }
-
-                LoadingState.LOADING_MORE -> {
-                    swipeRefreshLayout.isRefreshing = true
-                }
-
-                LoadingState.ERROR -> {
-                    retry()
                 }
             }
-        }
 
-        override fun onError(databaseError: DatabaseError) {
-            super.onError(databaseError)
-            swipeRefreshLayout.isRefreshing = false
-            databaseError.toException().printStackTrace()
+            override fun onLoadingStateChanged(state: LoadingState) {
+                when (state) {
+                    LoadingState.LOADING_INITIAL -> {
+                    }
+
+                    LoadingState.LOADED -> {
+                        swipeRefreshLayout.isRefreshing = false
+                    }
+
+                    LoadingState.FINISHED -> {
+                        swipeRefreshLayout.isRefreshing = false
+                    }
+
+                    LoadingState.LOADING_MORE -> {
+                        swipeRefreshLayout.isRefreshing = true
+                    }
+
+                    LoadingState.ERROR -> {
+                        retry()
+                    }
+                }
+            }
+
+            override fun onError(databaseError: DatabaseError) {
+                super.onError(databaseError)
+                swipeRefreshLayout.isRefreshing = false
+                databaseError.toException().printStackTrace()
+            }
+
         }
+        firebaseAdapter.notifyDataSetChanged()
+        firebaseAdapter.startListening()
+        recyclerView.adapter = firebaseAdapter
+
+        swipeRefreshLayout.setOnRefreshListener(object : SwipeRefreshLayout.OnRefreshListener {
+            override fun onRefresh() {
+                firebaseAdapter.refresh()
+            }
+
+        })
 
     }
-    firebaseAdapter.notifyDataSetChanged()
-    firebaseAdapter.startListening()
-    recyclerView.adapter = firebaseAdapter
-
-    swipeRefreshLayout.setOnRefreshListener(object: SwipeRefreshLayout.OnRefreshListener {
-        override fun onRefresh() {
-            firebaseAdapter.refresh()
-        }
-
-    })
-
-}
 
     private fun viewUserProfileDetails() {
         val builder = AlertDialog.Builder(this@DashBoardActivity)
@@ -349,8 +370,10 @@ private fun firebaseSearch(searchText: String) {
                 view.profile_details_phone.text = phoneNumber
 
             } else {
-                Toast.makeText(this@DashBoardActivity, "Fetching the Data From Firebase Failed",
-                    Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    this@DashBoardActivity, "Fetching the Data From Firebase Failed",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }
     }
@@ -362,8 +385,14 @@ private fun firebaseSearch(searchText: String) {
             arrayOf("Select photo from Gallery", "Capture Photo from Camera")
         pictureDialog.setItems(pictureDialogItem) { _, selection ->
             when (selection) {
-                0 -> permissionForCaptureImage.galleryCheckPermission(this@DashBoardActivity, permissionListeners)
-                1 -> permissionForCaptureImage.cameraCheckPermission(this@DashBoardActivity, permissionListeners)
+                0 -> permissionForCaptureImage.galleryCheckPermission(
+                    this@DashBoardActivity,
+                    permissionListeners
+                )
+                1 -> permissionForCaptureImage.cameraCheckPermission(
+                    this@DashBoardActivity,
+                    permissionListeners
+                )
             }
         }
         pictureDialog.show()
@@ -476,5 +505,43 @@ private fun firebaseSearch(searchText: String) {
             }
         }
 
+    private fun onNavigationItemSelected() {
+        bottomNavigationView.setOnNavigationItemSelectedListener {
+            when(it.itemId) {
+                R.id.navigation_home -> {
+                    Toast.makeText(this@DashBoardActivity, "Home Activity", Toast.LENGTH_SHORT).show()
+                }
+
+                R.id.navigation_notification -> {
+                    Toast.makeText(this@DashBoardActivity, "Notification", Toast.LENGTH_SHORT).show()
+                }
+
+                R.id.navigation_logOut -> {
+                    layOut()
+                }
+            }
+            true
+        }
+    }
+
+    fun layOut() {
+        val builder = androidx.appcompat.app.AlertDialog.Builder(this)
+        val view = layoutInflater.inflate(R.layout.dialog_box_logout, null)
+        view.dialog_signOut
+        builder.setView(view)
+        builder.setPositiveButton("Confirm") { _, _ ->
+            signOut()
+        }
+        builder.setNegativeButton("Cancel") { _, _ -> }
+        builder.show()
+
+    }
+
+    private fun signOut() {
+        mAuthentication.signOut()
+        Toast.makeText(applicationContext, "Logged Out", Toast.LENGTH_SHORT).show()
+        startActivity(Intent(this@DashBoardActivity, MainActivity::class.java))
+        finish()
+    }
 
 }

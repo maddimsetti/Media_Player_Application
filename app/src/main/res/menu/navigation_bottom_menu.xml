@@ -15,9 +15,9 @@
             app:showAsAction="always" />
 
         <item
-            android:id="@+id/navigation_library"
-            android:title="LIBRARY"
-            android:icon="@drawable/ic_navigation_video_library"
+            android:id="@+id/navigation_logOut"
+            android:title="LOGOUT"
+            android:icon="@drawable/ic_logout_button"
             app:showAsAction="always" />
 
 </menu>

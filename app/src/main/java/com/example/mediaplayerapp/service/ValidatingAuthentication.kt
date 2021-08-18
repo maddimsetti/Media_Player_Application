@@ -2,14 +2,13 @@ package com.example.mediaplayerapp.service
 
 import android.util.Log
 import com.example.mediaplayerapp.listeners.AuthenticationListener
-import com.example.mediaplayerapp.pojoclass.ProfileDetails
+import com.example.mediaplayerapp.network.LoginListener
+import com.example.mediaplayerapp.network.LoginLoader
+import com.example.mediaplayerapp.network.MediaPlayerLoginRequest
+import com.example.mediaplayerapp.network.MediaPlayerLoginResponse
 import com.example.mediaplayerapp.registration.RegistrationFragment.Companion.TAG
-import com.google.android.gms.tasks.OnCompleteListener
-import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
-import com.google.firebase.database.FirebaseDatabase
-import kotlinx.android.synthetic.main.fragment_registration.*
 
 class ValidatingAuthentication {
 
@@ -63,4 +62,27 @@ class ValidatingAuthentication {
             }
         }
     }
+
+    fun userLoginIntoAccountUsingAPI(email: String, password: String, listener: AuthenticationListener) {
+        LoginLoader().loginUserWithEmailIdPassword(MediaPlayerLoginRequest(email, password, true),
+            object : LoginListener {
+                override fun onLogin(loginResponse: MediaPlayerLoginResponse) {
+                    if (loginResponse.registered) {
+                        //Sign-In success, Update UI
+                        Log.d(TAG, "userLoginIntoAccount: Success")
+                        listener.onLogin(true, null)
+                    } else {
+
+                    }
+                }
+
+                override fun onFailure(errorMessage: String) {
+                    //If Sign-In fails, display a message to the User
+                    Log.d(TAG, "userLoginIntoAccount: failure $errorMessage")
+                    listener.onLogin(false, errorMessage)
+                }
+
+            })
+    }
+
 }

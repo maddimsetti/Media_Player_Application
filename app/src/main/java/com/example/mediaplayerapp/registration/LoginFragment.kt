@@ -96,7 +96,7 @@ class LoginFragment : Fragment(), View.OnClickListener {
     }
 
     private fun userLoginUsingFirebase() {
-        validatingAuthentication.userLoginIntoAccount(email_login_page.text.toString(),
+        validatingAuthentication.userLoginIntoAccountUsingAPI(email_login_page.text.toString(),
             password_login_page.text.toString(), listener)
 
     }
